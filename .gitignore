@@ -1,0 +1,17 @@
+# Never commit signing material or its secrets
+signing/
+
+# Node
+node_modules/
+
+# Android / Gradle build output
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/captures/
+android/.idea/
+*.iml
+
+# OS cruft
+.DS_Store

@@ -1,0 +1,20 @@
+{
+  "name": "balikbayan-protocol",
+  "version": "1.0.0",
+  "description": "Balikbayan Protocol - a cyberpunk time-travel guide app",
+  "private": true,
+  "scripts": {
+    "sync": "cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.2",
+    "@capacitor/app": "^6.0.3",
+    "@capacitor/core": "^6.2.2",
+    "@capacitor/splash-screen": "^6.0.4",
+    "@capacitor/status-bar": "^6.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.2.2"
+  }
+}

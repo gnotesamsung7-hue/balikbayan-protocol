@@ -1,0 +1,87 @@
+name: Build Android app
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install web/Capacitor dependencies
+        run: npm ci
+
+      - name: Sync Capacitor Android project
+        run: npx cap sync android
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x android/gradlew
+
+      # Always build a debug APK -- useful for installing on a test phone,
+      # and doesn't need any secrets configured.
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: balikbayan-protocol-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      # The signed release bundle only builds once the four RELEASE_* secrets
+      # below are set in this repo (Settings > Secrets and variables > Actions).
+      # See SETUP_GUIDE.md. Until then this step is skipped, not failed.
+      - name: Decode release keystore
+        id: keystore
+        if: ${{ secrets.RELEASE_KEYSTORE_BASE64 != '' }}
+        run: |
+          mkdir -p android/app/keystore
+          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > android/app/keystore/balikbayan-release.keystore
+          echo "has_keystore=true" >> "$GITHUB_OUTPUT"
+
+      - name: Build signed release .aab
+        if: steps.keystore.outputs.has_keystore == 'true'
+        working-directory: android
+        env:
+          RELEASE_STORE_FILE: ${{ github.workspace }}/android/app/keystore/balikbayan-release.keystore
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Upload release .aab
+        if: steps.keystore.outputs.has_keystore == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: balikbayan-protocol-release-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+
+      - name: Remove decoded keystore
+        if: always()
+        run: rm -rf android/app/keystore

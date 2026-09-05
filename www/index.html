@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="color-scheme" content="dark">
+<title>Balikbayan Protocol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Iceberg&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --bg:#070a12;
+    --bg-panel:#0c1120;
+    --bg-raised:#121a2e;
+    --line:#22304e;
+    --text:#e7edfb;
+    --text-dim:#8a97bd;
+    --text-faint:#4c5877;
+    --cyan:#2fe6ff;
+    --magenta:#ff2f9e;
+    --amber:#ffb020;
+    --danger:#ff4d4d;
+    --cyan-glow: rgba(47,230,255,.35);
+    --magenta-glow: rgba(255,47,158,.35);
+    --amber-glow: rgba(255,176,32,.35);
+    --font-display:'Iceberg', 'Arial Narrow', sans-serif;
+    --font-body:'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, 'Courier New', monospace;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; }
+  html{ background:var(--bg); }
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    min-height:100vh;
+    overflow-x:hidden;
+    overscroll-behavior:none;
+  }
+  h1,h2,h3{ font-family:var(--font-display); text-wrap:balance; margin:0; letter-spacing:.03em; }
+  p{ margin:0; }
+  button{ font-family:var(--font-mono); cursor:pointer; }
+  ::selection{ background:var(--magenta); color:#fff; }
+
+  a:focus-visible, button:focus-visible, input:focus-visible{
+    outline:2px solid var(--cyan);
+    outline-offset:2px;
+  }
+
+  /* ---------- ambient texture ---------- */
+  #crt-overlay{
+    position:fixed; inset:0; pointer-events:none; z-index:50; mix-blend-mode:overlay;
+    background:
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.035) 0px, rgba(255,255,255,.035) 1px, transparent 1px, transparent 3px);
+    opacity:.5;
+  }
+  #vignette{
+    position:fixed; inset:0; pointer-events:none; z-index:49;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.55) 100%);
+  }
+  body::before{
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:42px 42px;
+    opacity:.14;
+    mask-image: radial-gradient(ellipse at 50% 0%, black 0%, transparent 75%);
+  }
+
+  #app{ position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column; }
+
+  /* ---------- HUD ---------- */
+  #hud{
+    position:sticky; top:0; z-index:20;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; padding:calc(14px + var(--safe-top)) 22px 14px;
+    background:rgba(7,10,18,.86); backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .wordmark{
+    font-family:var(--font-display); font-size:1.1rem; letter-spacing:.08em;
+    color:var(--text); white-space:nowrap;
+  }
+  .wordmark-accent{ color:var(--cyan); text-shadow:0 0 10px var(--cyan-glow); }
+  .hud-right{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:flex-end; }
+  @media (max-width:430px){
+    #hud{ flex-wrap:wrap; gap:10px; padding-left:16px; padding-right:16px; row-gap:12px; }
+    .wordmark{ font-size:.92rem; }
+    .hud-right{ width:100%; justify-content:space-between; gap:10px; }
+    .stat{ align-items:flex-start; }
+    .stat-label{ font-size:.58rem; }
+    .stat-value{ font-size:.85rem; }
+    .ghost-btn{ padding:6px 10px; font-size:.6rem; }
+  }
+  .stat{ display:flex; flex-direction:column; align-items:flex-end; line-height:1.15; }
+  .stat-label{ font-family:var(--font-mono); font-size:.6rem; letter-spacing:.12em; color:var(--text-faint); white-space:nowrap; }
+  .stat-value{ font-family:var(--font-mono); font-size:.95rem; font-variant-numeric:tabular-nums; color:var(--amber); }
+  #stat-timer.warn{ color:var(--danger); }
+  .ghost-btn{
+    background:transparent; border:1px solid var(--line); color:var(--text-dim);
+    padding:8px 14px; font-size:.65rem; letter-spacing:.12em;
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    transition:border-color .15s, color .15s;
+  }
+  .ghost-btn:hover{ border-color:var(--cyan); color:var(--cyan); }
+  .ghost-btn.confirming{ border-color:var(--danger); color:var(--danger); }
+
+  /* ---------- layout ---------- */
+  main{ flex:1; display:flex; flex-direction:column; padding:32px 20px calc(60px + var(--safe-bottom)); max-width:980px; width:100%; margin:0 auto; }
+  .screen{ display:flex; flex-direction:column; gap:22px; }
+
+  .eyebrow{
+    font-family:var(--font-mono); font-size:.7rem; letter-spacing:.14em; color:var(--cyan);
+    text-transform:uppercase; margin-bottom:10px;
+  }
+  .body-text{ color:var(--text-dim); font-size:.95rem; line-height:1.65; max-width:62ch; }
+
+  .panel{
+    background:linear-gradient(180deg, var(--bg-raised), var(--bg-panel));
+    border:1px solid var(--line);
+    padding:24px 22px;
+    clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
+    position:relative;
+  }
+  .panel::before{
+    content:""; position:absolute; top:0; left:0; width:46px; height:1px; background:var(--cyan); box-shadow:0 0 8px var(--cyan-glow);
+  }
+
+  /* ---------- boot ---------- */
+  #screen-boot{ align-items:center; padding-top:6vh; }
+  .boot-panel{ max-width:560px; width:100%; }
+  .boot-panel h1{ font-size:2rem; margin:6px 0 16px; color:var(--text); }
+  .field-label{ display:block; font-family:var(--font-mono); font-size:.68rem; letter-spacing:.12em; color:var(--text-faint); margin:22px 0 8px; }
+  .date-input{
+    width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text);
+    font-family:var(--font-mono); font-size:1rem; padding:12px 14px;
+  }
+  .date-input:focus{ border-color:var(--cyan); }
+  .primary-btn{
+    margin-top:22px; width:100%; background:var(--cyan); color:#04121a; border:none;
+    font-size:.82rem; letter-spacing:.14em; font-weight:600; padding:14px 18px;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    box-shadow:0 0 22px var(--cyan-glow);
+    transition:transform .12s, box-shadow .12s;
+  }
+  .primary-btn:disabled{ background:var(--line); color:var(--text-faint); box-shadow:none; cursor:not-allowed; }
+  .primary-btn:not(:disabled):hover{ transform:translateY(-1px); box-shadow:0 0 30px var(--cyan-glow); }
+  .primary-btn.danger-glow{ background:var(--magenta); color:#2a0016; box-shadow:0 0 22px var(--magenta-glow); }
+  .primary-btn.danger-glow:not(:disabled):hover{ box-shadow:0 0 32px var(--magenta-glow); }
+  .hint{ margin-top:14px; font-family:var(--font-mono); font-size:.78rem; color:var(--danger); }
+
+  /* ---------- home ---------- */
+  .home-grid{ display:grid; gap:22px; grid-template-columns:1fr; }
+  .greeting-panel h1{ font-size:1.7rem; margin:4px 0 12px; }
+
+  .timeline-track{
+    display:flex; flex-direction:column; gap:2px; max-height:280px; overflow-y:auto;
+    padding-right:6px;
+  }
+  .timeline-track::-webkit-scrollbar{ width:6px; }
+  .timeline-track::-webkit-scrollbar-thumb{ background:var(--line); }
+  .timeline-item{
+    display:grid; grid-template-columns:80px 1fr auto; align-items:center; gap:10px;
+    padding:10px 8px; border:none; border-bottom:1px solid var(--line); background:none; border-left:2px solid transparent;
+    color:inherit; text-align:left; width:100%; font:inherit; -webkit-appearance:none; appearance:none; margin:0;
+  }
+  .timeline-item.clickable:hover{ border-left-color:var(--cyan); background:rgba(47,230,255,.05); }
+  .timeline-item.clickable{ cursor:pointer; }
+  .timeline-item .t-range{ font-family:var(--font-mono); font-size:.72rem; color:var(--text-dim); }
+  .timeline-item .t-era{ font-size:.82rem; letter-spacing:.02em; }
+  .timeline-item .t-flag{ font-family:var(--font-mono); font-size:.6rem; letter-spacing:.1em; color:var(--text-faint); }
+  .timeline-item.nodata .t-era{ color:var(--text-faint); font-style:italic; }
+  .timeline-item.nodata .t-flag{ color:var(--danger); }
+  .timeline-item.now .t-flag{ color:var(--amber); }
+
+  .jump-panel .slider-row{ display:flex; align-items:center; gap:14px; margin-top:6px; }
+  .slider-cap{ font-family:var(--font-mono); font-size:.65rem; color:var(--text-faint); letter-spacing:.08em; white-space:nowrap; }
+  .jump-slider{
+    -webkit-appearance:none; appearance:none; flex:1; height:4px; background:var(--line); outline:none;
+  }
+  .jump-slider::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none; width:20px; height:20px; background:var(--amber);
+    box-shadow:0 0 10px var(--amber-glow); cursor:pointer; border:2px solid #1a1100;
+  }
+  .jump-slider::-moz-range-thumb{
+    width:20px; height:20px; background:var(--amber); box-shadow:0 0 10px var(--amber-glow); cursor:pointer; border:2px solid #1a1100;
+  }
+  .jump-readout{ display:flex; justify-content:space-between; align-items:baseline; margin:18px 0 4px; }
+  .jump-readout-label{ font-family:var(--font-mono); font-size:.68rem; color:var(--text-faint); letter-spacing:.12em; }
+  .jump-readout-value{ font-family:var(--font-mono); font-size:1.2rem; color:var(--amber); font-variant-numeric:tabular-nums; }
+
+  /* ---------- transit ---------- */
+  #screen-transit{ align-items:center; justify-content:center; min-height:50vh; }
+  .transit-content{ text-align:center; }
+  .transit-line{ font-family:var(--font-mono); letter-spacing:.14em; color:var(--cyan); font-size:.9rem; margin-bottom:18px; }
+  .transit-bar{ width:260px; height:3px; background:var(--line); overflow:hidden; }
+  .transit-bar-fill{ height:100%; width:0%; background:var(--cyan); box-shadow:0 0 10px var(--cyan-glow); animation:fillbar .85s ease forwards; }
+  @keyframes fillbar{ to{ width:100%; } }
+
+  /* ---------- dossier ---------- */
+  .dossier-header{ display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; }
+  .dossier-header h1{ font-size:2.1rem; color:var(--text); }
+  #dossier-era-label{ color:var(--amber); font-family:var(--font-mono); font-size:.78rem; letter-spacing:.1em; margin-top:6px; }
+  .dossier-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+
+  .dossier-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; }
+  .dossier-grid .feature{ grid-column:span 2; }
+  .dossier-grid .factpanel{ grid-column:1 / -1; }
+  @media (min-width:560px){
+    .dossier-grid .feature{ grid-column:span 1; }
+  }
+  @media (min-width:720px){
+    .dossier-grid{ grid-template-columns:repeat(6, 1fr); }
+    .dossier-grid .feature{ grid-column:span 3; }
+    .dossier-grid .factpanel{ grid-column:span 2; }
+  }
+
+  .feature{ padding:20px; }
+  .feature .eyebrow{ margin-bottom:6px; }
+  .feature .f-value{ font-family:var(--font-display); font-size:1.2rem; line-height:1.3; }
+  .feature.amber .eyebrow{ color:var(--amber); }
+  .feature.amber::before{ background:var(--amber); box-shadow:0 0 8px var(--amber-glow); }
+  .feature.magenta .eyebrow{ color:var(--magenta); }
+  .feature.magenta::before{ background:var(--magenta); box-shadow:0 0 8px var(--magenta-glow); }
+
+  .factpanel h3{ font-family:var(--font-mono); font-size:.7rem; letter-spacing:.14em; color:var(--text-dim); margin-bottom:14px; }
+  .factpanel ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px; }
+  .factpanel li{ font-size:.84rem; line-height:1.55; color:var(--text); padding-left:14px; position:relative; }
+  .factpanel li::before{ content:"›"; position:absolute; left:0; color:var(--text-faint); }
+  .factpanel.politics::before{ background:var(--cyan); box-shadow:0 0 8px var(--cyan-glow); }
+  .factpanel.showbiz::before{ background:var(--magenta); box-shadow:0 0 8px var(--magenta-glow); }
+  .factpanel.tech::before{ background:var(--amber); box-shadow:0 0 8px var(--amber-glow); }
+
+  .error-panel h2{ color:var(--danger); font-size:1.4rem; margin:6px 0 14px; }
+  .error-panel::before{ background:var(--danger); box-shadow:0 0 8px rgba(255,77,77,.4); }
+
+  /* ---------- timeout ---------- */
+  #screen-timeout{ align-items:center; padding-top:10vh; }
+  .timeout-panel{ max-width:560px; text-align:center; }
+  .timeout-panel .body-text{ max-width:none; margin:0 auto 22px; }
+  .timeout-panel::before{ background:var(--danger); box-shadow:0 0 8px rgba(255,77,77,.4); }
+
+  /* ---------- glitch ---------- */
+  .glitch{ position:relative; color:var(--text); }
+  @media (prefers-reduced-motion: no-preference){
+    .glitch::before, .glitch::after{
+      content:attr(data-text); position:absolute; left:0; top:0; width:100%; overflow:hidden;
+      background:var(--bg);
+    }
+    .glitch::before{ color:var(--cyan); animation:glitch-a 2.4s infinite linear alternate-reverse; clip-path:inset(0 0 55% 0); }
+    .glitch::after{ color:var(--magenta); animation:glitch-b 2.8s infinite linear alternate-reverse; clip-path:inset(55% 0 0 0); }
+  }
+  @keyframes glitch-a{ 0%{ transform:translate(0,0);} 20%{ transform:translate(-2px,1px);} 40%{ transform:translate(2px,-1px);} 60%{ transform:translate(-1px,0);} 100%{ transform:translate(1px,1px);} }
+  @keyframes glitch-b{ 0%{ transform:translate(0,0);} 25%{ transform:translate(2px,-1px);} 50%{ transform:translate(-2px,1px);} 75%{ transform:translate(1px,1px);} 100%{ transform:translate(-1px,-1px);} }
+
+  footer#footer-note{ padding:18px 20px calc(34px + var(--safe-bottom)); text-align:center; }
+  footer#footer-note p{ font-family:var(--font-mono); font-size:.64rem; letter-spacing:.04em; color:var(--text-faint); max-width:60ch; margin:0 auto; }
+
+  [hidden]{ display:none !important; }
+</style>
+</head>
+<body>
+
+<div id="crt-overlay"></div>
+<div id="vignette"></div>
+<div id="app">
+  <header id="hud">
+    <div class="hud-left">
+      <span class="wordmark">BALIKBAYAN<span class="wordmark-accent">_PROTOCOL</span></span>
+    </div>
+    <div class="hud-right" id="hud-stats" hidden>
+      <div class="stat">
+        <span class="stat-label">UPLINK</span>
+        <span class="stat-value" id="stat-timer">60:00</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">DAYS IN</span>
+        <span class="stat-value" id="stat-days">0</span>
+      </div>
+      <button id="btn-reset-counter" class="ghost-btn">RESET</button>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <section id="screen-boot" class="screen">
+      <div class="panel boot-panel">
+        <p class="eyebrow">// first sync required</p>
+        <h1 class="glitch" data-text="ORIGIN LOCK">ORIGIN LOCK</h1>
+        <p class="body-text">Before you can jack into the timestream, the Protocol needs your origin coordinate — the date you were born. It's the hard floor of every jump: you can ride the stream back that far and not one day further.</p>
+        <label class="field-label" for="input-birthdate">DATE OF ORIGIN</label>
+        <input type="date" id="input-birthdate" class="date-input">
+        <button id="btn-confirm-birthdate" class="primary-btn" disabled>LOCK ORIGIN</button>
+        <p class="hint" id="boot-error" hidden></p>
+      </div>
+    </section>
+
+    <section id="screen-home" class="screen" hidden>
+      <div class="home-grid">
+        <div class="panel greeting-panel">
+          <p class="eyebrow" id="greeting-eyebrow">// status</p>
+          <h1 id="greeting-text">Hey.</h1>
+          <p class="body-text" id="greeting-sub"></p>
+        </div>
+
+        <div class="panel timeline-panel">
+          <p class="eyebrow">// life timeline — <span id="timeline-range"></span></p>
+          <div class="timeline-track" id="timeline-track"></div>
+        </div>
+
+        <div class="panel jump-panel">
+          <p class="eyebrow">// temporal jump control</p>
+          <div class="slider-row">
+            <span class="slider-cap" id="slider-min-label">ORIGIN</span>
+            <input type="range" id="jump-slider" class="jump-slider">
+            <span class="slider-cap" id="slider-max-label">TODAY</span>
+          </div>
+          <div class="jump-readout">
+            <span class="jump-readout-label">TARGET DATE</span>
+            <span class="jump-readout-value" id="jump-date-display">—</span>
+          </div>
+          <button id="btn-engage" class="primary-btn danger-glow">ENGAGE JUMP</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-transit" class="screen" hidden>
+      <div class="transit-content">
+        <p class="transit-line">STABILIZING TEMPORAL LATTICE…</p>
+        <div class="transit-bar"><div class="transit-bar-fill"></div></div>
+      </div>
+    </section>
+
+    <section id="screen-dossier" class="screen" hidden>
+      <div class="dossier-header panel">
+        <div>
+          <p class="eyebrow">// coordinates locked</p>
+          <h1 id="dossier-year">1998</h1>
+          <p id="dossier-era-label">—</p>
+        </div>
+        <div class="dossier-actions">
+          <button id="btn-jump-again" class="ghost-btn">JUMP AGAIN</button>
+          <button id="btn-return-present" class="ghost-btn">RETURN TO PRESENT</button>
+        </div>
+      </div>
+
+      <div id="dossier-body" class="dossier-grid"></div>
+
+      <div id="dossier-error" class="panel error-panel" hidden>
+        <p class="eyebrow">// signal lost</p>
+        <h2>ARCHIVE UNAVAILABLE</h2>
+        <p class="body-text" id="dossier-error-text"></p>
+      </div>
+    </section>
+
+    <section id="screen-timeout" class="screen" hidden>
+      <div class="panel timeout-panel">
+        <p class="eyebrow">// session expired</p>
+        <h1 class="glitch" data-text="CONNECTION SEVERED">CONNECTION SEVERED</h1>
+        <p class="body-text">You've been in the stream a full hour. The Protocol forces a hard log-off before continuous exposure fries your temporal signature. Reconnect to pick a new jump.</p>
+        <button id="btn-reconnect" class="primary-btn">REINITIATE UPLINK</button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer id="footer-note">
+    <p>ARCHIVE SOURCE: curated Philippine history compilation spanning the 1940s–2026 · politics, showbiz, technology, everyday communication, and street-level trend, per era. Coverage thins before 1940 and beyond the present day.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var PH_HISTORY = {
+    "1940s": { politics:["The Philippines suffered brutal Japanese occupation from 1942–1945, including the Bataan Death March and the devastating 1945 Battle of Manila.","The Philippines gained full independence from the United States on July 4, 1946, with Manuel Roxas as the first president of the Third Republic.","Post-war reconstruction began under presidents Roxas and Elpidio Quirino amid Huk rebellion unrest in Central Luzon."], showbiz:["Sampaguita Pictures and LVN Pictures dominated a booming post-war Filipino movie studio era.","Kundiman (traditional Filipino love ballads) and balladeers like Ruben Tagalog were hugely popular on radio.","Radio drama serials (radyo nobela) were the main mass entertainment format for Filipino families."], technology:["AM radio became the primary mass medium for news and entertainment across the archipelago.","War-surplus jeeps were converted into the first jeepneys, which became the iconic Philippine mode of transport."], communication_device:"Letters and telegrams — only wealthy households or offices had landline telephones.", trend:"Ternos and Americana-style suits mixed with wartime-influenced fashion as the country rebuilt after WWII." },
+    "1950s": { politics:["Ramon Magsaysay won the presidency in 1953 on a hugely popular anti-corruption, pro-farmer platform and suppressed the Huk rebellion.","Magsaysay died in a plane crash in Cebu in 1957, plunging the nation into mourning; Carlos P. Garcia succeeded him.","Garcia's 'Filipino First' policy promoted Filipino-owned businesses over foreign interests."], showbiz:["Filipino movie studios' golden age flourished, led by stars like Rogelio de la Rosa and Gloria Romero.","Rock and roll and American pop music began influencing Filipino youth via radio and jukeboxes.","Sampaguita and LVN Pictures released dozens of films a year, cementing a local star system."], technology:["Television arrived in the Philippines in 1953 with the launch of DZAQ-TV (later ABS-CBN), the first in Southeast Asia.","Household appliances like refrigerators and radios became more common in urban middle-class homes."], communication_device:"Landline telephones for the elite and businesses — most ordinary Filipinos still relied on letters and word of mouth.", trend:"Rock and roll dance crazes and American-style fashion caught on among Manila's youth." },
+    "1960s": { politics:["Diosdado Macapagal became president in 1961 and moved Independence Day observance to June 12 to honor the 1898 declaration.","Ferdinand Marcos was elected president in 1965, promising infrastructure and progress.","Marcos won re-election in 1969 amid growing student activism and the First Quarter Storm protest movement."], showbiz:["Nora Aunor and Vilma Santos rose to fame as teen singing and acting idols, becoming lifelong rival superstars.","Pilita Corrales became known as the 'Asia's Queen of Songs' with regional hit records.","Local rock bands and pop combos flourished alongside the Beatles-driven 'Beatlemania' craze."], technology:["Television ownership expanded rapidly in Manila and nearby provinces through the decade.","Transistor radios became widely affordable, bringing music and news to remote barrios."], communication_device:"Transistor radios for news and landline phones in the cities — barrio residents still relied on letters and personal messengers.", trend:"Beatlemania, mini-skirts, and rock-and-roll dance crazes swept Filipino youth culture." },
+    "1970s": { politics:["President Marcos declared Martial Law on September 21–23, 1972, suspending civil liberties and beginning over a decade of authoritarian rule.","A new 1973 Constitution let Marcos stay in power indefinitely, and press freedom was curtailed with media outlets shut down.","Marcos nominally ended Martial Law in 1981 but retained emergency powers; opposition figure Ninoy Aquino Jr. was imprisoned for years."], showbiz:["Bomba (soft-core) films and action movies flourished even under censorship, alongside the rise of the Manila Film Festival.","Nora Aunor and Vilma Santos remained top box-office draws; the Manila Sound genre (Hotdog, VST & Company) defined 70s OPM.","Eat Bulaga! (1979) launched as a pioneering noontime variety show alongside the long-running Student Canteen."], technology:["Color television broadcasting began reaching Filipino households in the mid-1970s.","Direct-dial domestic long-distance telephone service expanded between major Philippine cities."], communication_device:"Landline telephones (party lines common) in cities and telegrams for urgent long-distance messages — many rural areas still relied on letters.", trend:"The 'Manila Sound' disco and bell-bottom fashion defined youth style, alongside platform shoes and psychedelic prints." },
+    "1980s": { politics:["Ninoy Aquino was assassinated at Manila International Airport on August 21, 1983, galvanizing the anti-Marcos opposition.","The People Power (EDSA) Revolution in February 1986 peacefully toppled the 20-year Marcos dictatorship and installed Corazon Aquino as president.","President Aquino survived several coup attempts and promulgated a new 1987 Constitution restoring democratic institutions."], showbiz:["Sharon Cuneta became the 'Megastar' with a string of blockbuster teen romance films.","The noontime show wars intensified between Eat Bulaga! and It's Showtime predecessors.","OPM flourished with icons like Freddie Aguilar ('Anak') and the Apo Hiking Society."], technology:["Betamax and VHS home video players became common, spreading pirated and licensed movies to households.","Cable television and the first computer stores began appearing in Metro Manila."], communication_device:"Landline telephones were the household standard, alongside public payphones and the first pagers/beepers for professionals late in the decade.", trend:"Big hair, shoulder pads, and 'jeprox/jologs' slang emerged, along with breakdancing and New Wave fashion." },
+    "1990s": { politics:["Fidel V. Ramos became president in 1992, ushering in economic reforms and 'Philippines 2000' growth ambitions.","Joseph 'Erap' Estrada, a popular former action star, won a landslide presidential victory in 1998.","The Mount Pinatubo eruption in 1991 was one of the largest volcanic eruptions of the 20th century, and the US bases at Clark and Subic closed in 1991–92."], showbiz:["The FPJ-led action film era continued while Regine Velasquez and the 'OPM divas' dominated the charts.","ABS-CBN's Ang TV and later teleseryes/game shows reshaped local TV after the network's 1992 post-EDSA revival.","Boy bands, girl groups, and karaoke culture boomed nationwide."], technology:["Mobile (cellular) phones and pagers/beepers became status symbols for professionals in the early-to-mid 90s.","The Philippines got its first public internet access in 1994, and Filipinos became avid early adopters of SMS texting by the late 1990s."], communication_device:"Pagers and beepers in the early 90s, giving way rapidly to cellular phones with SMS texting by the late 1990s.", trend:"SMS/texting culture exploded as a national pastime, alongside karaoke (videoke) nights and 'jeje/jologs' slang." },
+    "2000s": { politics:["The Second EDSA Revolution (EDSA II) in January 2001 ousted President Estrada over corruption, installing Gloria Macapagal-Arroyo.","Arroyo won a contested 2004 election and survived numerous coup attempts and the 'Hello Garci' election-rigging scandal in 2005.","The 2009 Maguindanao Massacre, one of the deadliest attacks on journalists in history, shocked the nation."], showbiz:["Teleseryes like Marimar and Pangako Sa 'Yo became massive national hits; Kris Aquino ruled daytime TV.","Reality/talent shows Pinoy Big Brother (2005) and Philippine Idol captivated audiences.","ASAP and Wowowee-style noontime shows drew huge live studio crowds and controversy."], technology:["SMS texting became ubiquitous and even fueled political mobilization (the EDSA II 'text brigades').","Internet cafes proliferated nationwide, and Friendster became the first massively popular social network among Filipinos."], communication_device:"Cellular phones with SMS texting were the dominant everyday communication method for most Filipinos.", trend:"Text messaging slang ('txt speak'), Friendster profile culture, and the 'Wowowee' noontime show craze defined the era." },
+    "2010s": { politics:["Benigno 'Noynoy' Aquino III was elected president in 2010 on an anti-corruption 'Daang Matuwid' platform.","Rodrigo Duterte won the presidency in 2016 and launched a controversial and deadly 'war on drugs' campaign.","Typhoon Yolanda (Haiyan) devastated the Visayas in 2013, becoming one of the deadliest typhoons in Philippine history."], showbiz:["Teleseryes like Ang Probinsyano and romance films dominated ratings and box office.","K-pop and Korean dramas surged in popularity alongside homegrown love teams like KathNiel and JaDine.","Vice Ganda became one of the country's biggest comedy stars, hosting It's Showtime."], technology:["Smartphones became mainstream and affordable, and Facebook became the dominant social platform ('Facebook capital of the world').","4G/LTE mobile internet rollout and the rise of ride-hailing apps like Grab transformed daily life."], communication_device:"Smartphones using Facebook Messenger and mobile data became the everyday way Filipinos communicated, alongside continued SMS use.", trend:"Viral Facebook memes, K-pop fandom culture, and dance-craze videos defined youth pop culture." },
+    "2020": { politics:["President Duterte declared a nationwide COVID-19 lockdown starting mid-March 2020, among the world's longest and strictest.","Congress denied ABS-CBN's broadcast franchise renewal in July 2020, forcing the shutdown of the country's largest network.","The Anti-Terrorism Act of 2020 was signed into law, sparking major human-rights concerns and protests."], showbiz:["ABS-CBN's shutdown forced its stars and shows onto digital/cable platforms and rival network GMA.","Online concerts and livestream shows became the norm as venues closed due to the pandemic.","Teleseryes and noontime shows adapted to 'bubble' production setups with strict health protocols."], technology:["Video conferencing (Zoom, Google Meet) and online learning platforms became essential overnight.","E-commerce and food delivery apps (Lazada, Shopee, GrabFood) saw explosive growth as Filipinos stayed home."], communication_device:"Smartphones with Facebook Messenger, plus new heavy reliance on Zoom and Google Meet for video calls during lockdown.", trend:"Pandemic-era trends like Dalgona coffee, banana bread baking, and viral TikTok dance challenges took over." },
+    "2021": { politics:["The Philippines rolled out its national COVID-19 vaccination program starting March 2021 amid supply shortages and public hesitancy.","The country continued cycling through quarantine levels as new COVID variants like Delta emerged.","Political maneuvering intensified ahead of the 2022 elections, with Duterte's PDP-Laban party fracturing over succession plans."], showbiz:["Streaming platforms Netflix and Disney+ grew rapidly in Philippine adoption as local content moved online.","It's Showtime and Eat Bulaga! continued as top-rated noontime shows despite pandemic-limited audiences.","Filipino online content creators and vloggers surged in popularity as YouTube and TikTok became mainstream entertainment."], technology:["Digital payment apps like GCash and Maya saw massive adoption growth as Filipinos shifted to cashless transactions.","5G mobile network rollout began in select Metro Manila areas by major telcos Globe and Smart."], communication_device:"Smartphones with Facebook Messenger and GCash for both chatting and payments became central to daily life.", trend:"TikTok dance trends, viral challenges, and OPM revival songs like 'Pantropiko' dominated social feeds." },
+    "2022": { politics:["Ferdinand 'Bongbong' Marcos Jr. won a landslide victory in the May 2022 presidential election, with Sara Duterte as vice president.","The Philippines lifted most COVID-19 restrictions and reopened its economy and international borders through the year.","President Marcos Jr. pursued closer ties with the US while continuing to navigate tensions with China in the West Philippine Sea."], showbiz:["Streaming and social media further disrupted traditional TV as GMA Network and digital-first Kapamilya Online Live competed for viewers post-ABS-CBN shutdown.","OPM saw a resurgence of city pop and 'sad songs' viral hits on Spotify and TikTok among Gen Z listeners.","Philippine cinema rebounded with hits in the Metro Manila Film Festival as theaters reopened."], technology:["5G network coverage expanded significantly across major Philippine cities.","Electric vehicles and e-trikes began gaining traction as the government pushed green transport initiatives."], communication_device:"Smartphones with Facebook Messenger remained dominant, with growing use of GCash and Viber for chats and payments.", trend:"TikTok-driven OPM revival, 'rizz'-style Gen Z slang, and viral election-season memes defined the year." },
+    "2023": { politics:["Tensions escalated in the West Philippine Sea, with repeated Chinese coast guard water-cannon and laser incidents against Philippine vessels near Ayungin Shoal.","President Marcos Jr. strengthened Philippines–US military cooperation, adding new EDCA sites for US troop access.","The political alliance between the Marcos and Duterte camps began visibly fraying over drug-war probes and policy differences."], showbiz:["Filipino films and teleseryes continued streaming-platform expansion via Netflix, iWantTFC, and GMA's streaming service.","Sarah Geronimo, Regine Velasquez, and other veteran singers held blockbuster reunion concerts as live events fully returned post-pandemic.","Local remakes and Korean drama-inspired teleseryes remained hugely popular."], technology:["AI tools like ChatGPT gained widespread public and business use in the Philippines starting this year.","Government digitalization efforts expanded, including wider rollout of the national ID (PhilSys) system."], communication_device:"Smartphones with Facebook Messenger, Viber, and increasingly Telegram/WhatsApp remained the everyday way Filipinos communicated.", trend:"AI chatbot novelty (ChatGPT), K-pop/K-drama fandom culture, and Gen Z slang like 'gyatt' and 'sigma' spread online." },
+    "2024": { politics:["The Marcos–Duterte political alliance publicly collapsed, with Vice President Sara Duterte resigning her cabinet post in June 2024 amid escalating feuds.","West Philippine Sea confrontations intensified, including a serious June 2024 clash at Ayungin Shoal that damaged Philippine navy boats and injured personnel.","Impeachment complaints were filed against Vice President Sara Duterte late in the year over alleged threats and misuse of confidential funds."], showbiz:["Pinoy teleseryes and reality shows increasingly premiered day-and-date on Netflix, expanding global reach for Philippine content.","GMA Network and TV5 competed strongly for former ABS-CBN talent and noontime-show viewership.","Filipino movies had a strong Metro Manila Film Festival showing, with several entries becoming major box-office hits."], technology:["AI adoption accelerated across Philippine businesses and government services, including chatbot-based public services.","Digital banking and e-wallets (GCash, Maya) became the default way most urban Filipinos managed money."], communication_device:"Smartphones with Facebook Messenger and Viber remained standard, with more Filipinos also chatting via WhatsApp and Telegram.", trend:"The Marcos–Duterte political split became a constant meme and discussion trend online, alongside K-pop/Gen Z internet slang." },
+    "2025": { politics:["Former President Rodrigo Duterte was arrested in March 2025 on an International Criminal Court warrant over drug-war killings and flown to The Hague, a historic first for a Philippine leader.","A massive flood-control infrastructure corruption scandal erupted, exposing billions of pesos in 'ghost' projects and triggering some of the largest anti-corruption protests in years.","In the May 2025 midterm elections Duterte-allied Senate candidates performed strongly, while Sara Duterte's House impeachment was voided by the Supreme Court in July for violating the one-year rule."], showbiz:["Philippine teleseryes and films continued charting on Netflix's Top 10 Philippines list throughout the year.","Philippine cinema had a strong year with several acclaimed festival entries and box-office hits.","OPM and Filipino artists continued gaining international streaming traction alongside major concert tours."], technology:["AI tools became mainstream in Philippine workplaces and schools, with government agencies expanding AI-powered digital services under the eGovPH platform.","Digital and mobile banking usage continued to grow as more Filipinos went cashless for everyday transactions."], communication_device:"Smartphones with Facebook Messenger remained the dominant everyday chat app, alongside heavy use of TikTok and Viber for messaging.", trend:"Filipino slang and viral group-chat words spread rapidly via TikTok, while the flood-control scandal drove massive online outrage and protest memes." },
+    "2026": { politics:["The flood-control corruption scandal's fallout continued into 2026, with ongoing investigations, resignations, and public accountability demands dominating national discourse.","The Philippines held barangay and Sangguniang Kabataan elections in 2026, the country's most local level of grassroots politics.","Continued West Philippine Sea tensions with China remained a major foreign-policy and security concern for the Marcos administration."], showbiz:["Philippine teleseryes, films, and OPM artists continued to top Netflix Philippines and streaming charts into the year.","Miss World Philippines 2026 and other major pageants kept the Philippines' strong beauty-pageant culture in the spotlight.","Noontime and variety shows like It's Showtime and Eat Bulaga! continued as TV mainstays amid growing competition from streaming."], technology:["AI adoption became a major national business and government focus, with initiatives like 'JuanUp 2026' promoting AI and digitalization across industries.","The Philippines continued expanding AI-powered government services (eGovPH) and smart-surveillance technology adoption."], communication_device:"Smartphones with Facebook Messenger, TikTok, and AI-integrated chat apps are the everyday way ordinary Filipinos communicate.", trend:"AI chatbot and AI-generated content novelty, alongside fast-evolving Gen Z/Gen Alpha slang, define early-2026 online culture." }
+  };
+
+  var ERA_LABELS = {
+    "1940s":"POST-WAR REBUILD", "1950s":"TV DAWN", "1960s":"BEATLEMANIA YEARS", "1970s":"MARTIAL LAW ERA",
+    "1980s":"PEOPLE POWER", "1990s":"TEXT MESSAGING BOOM", "2000s":"FRIENDSTER ERA", "2010s":"SMARTPHONE AGE",
+    "2020":"LOCKDOWN YEAR", "2021":"VACCINE ROLLOUT", "2022":"MARCOS JR. ERA BEGINS", "2023":"AI ARRIVES",
+    "2024":"POLITICAL FALLOUT", "2025":"DUTERTE AT THE HAGUE", "2026":"PRESENT DAY"
+  };
+
+  var GREETINGS = [
+    "Yo. Systems synced — good to see you back topside.",
+    "Hey, traveler. The lattice missed you.",
+    "Sup. Uplink's warm and the timestream's calm today.",
+    "Look who jacked back in. Ready when you are.",
+    "Welcome back, chief. The archive's fully loaded."
+  ];
+
+  var DAY_MS = 86400000;
+  var SESSION_MS = 60 * 60 * 1000;
+
+  var timerInterval = null;
+  var sessionStart = null;
+
+  function $(id){ return document.getElementById(id); }
+
+  function localDateStr(d){
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+
+  function fmtDate(d){
+    return d.toLocaleDateString("en-US", { year:"numeric", month:"short", day:"numeric" });
+  }
+
+  function todayUTCMidnight(){
+    var n = new Date();
+    return Date.UTC(n.getFullYear(), n.getMonth(), n.getDate());
+  }
+
+  function parseDateInput(str){
+    var parts = str.split("-").map(Number);
+    return Date.UTC(parts[0], parts[1]-1, parts[2]);
+  }
+
+  function showScreen(id){
+    ["screen-boot","screen-home","screen-transit","screen-dossier","screen-timeout"].forEach(function(s){
+      $(s).hidden = (s !== id);
+    });
+  }
+
+  window.BBP_currentScreen = function(){
+    var ids = ["screen-boot","screen-home","screen-transit","screen-dossier","screen-timeout"];
+    for(var i=0;i<ids.length;i++){ if(!$(ids[i]).hidden) return ids[i]; }
+    return null;
+  };
+  window.BBP_showScreen = showScreen;
+
+  /* ---------------- bucket lookup ---------------- */
+  function getBucketKeyForYear(year){
+    if(year < 1940) return null;
+    if(year <= 2019) return String(Math.floor(year/10)*10) + "s";
+    if(year <= 2026) return String(year);
+    return null;
+  }
+
+  /* ---------------- boot screen ---------------- */
+  function initBoot(){
+    var input = $("input-birthdate");
+    var btn = $("btn-confirm-birthdate");
+    var err = $("boot-error");
+    var maxStr = localDateStr(new Date());
+    input.max = maxStr;
+
+    input.addEventListener("input", function(){
+      err.hidden = true;
+      btn.disabled = !input.value;
+    });
+
+    btn.addEventListener("click", function(){
+      if(!input.value){ return; }
+      var chosen = parseDateInput(input.value);
+      if(chosen > todayUTCMidnight()){
+        err.textContent = "That date hasn't happened yet. Pick a date on or before today.";
+        err.hidden = false;
+        return;
+      }
+      localStorage.setItem("bbp_birthdate", input.value);
+      bootDone();
+    });
+  }
+
+  function bootDone(){
+    showScreen("screen-home");
+    $("hud-stats").hidden = false;
+    initHome();
+    startDayCounter();
+    startSessionTimer();
+  }
+
+  /* ---------------- home screen ---------------- */
+  function initHome(){
+    var birthStr = localStorage.getItem("bbp_birthdate");
+    var birthMs = parseDateInput(birthStr);
+    var birthDate = new Date(birthMs);
+    var todayMs = todayUTCMidnight();
+    var today = new Date(todayMs);
+    var birthYear = birthDate.getUTCFullYear();
+    var currentYear = today.getUTCFullYear();
+
+    var ageYears = currentYear - birthYear;
+    var hadBirthdayThisYear = (today.getUTCMonth() > birthDate.getUTCMonth()) ||
+      (today.getUTCMonth() === birthDate.getUTCMonth() && today.getUTCDate() >= birthDate.getUTCDate());
+    if(!hadBirthdayThisYear){ ageYears -= 1; }
+
+    var hour = new Date().getHours();
+    var partOfDay = hour < 5 ? "the dead of night" : hour < 12 ? "the morning" : hour < 18 ? "the afternoon" : "the evening";
+    $("greeting-eyebrow").textContent = "// local time — " + partOfDay;
+    $("greeting-text").textContent = GREETINGS[Math.floor(Math.random()*GREETINGS.length)];
+    $("greeting-sub").textContent = "Origin locked at " + fmtDate(birthDate) + ". That puts you " + ageYears + " years into this run. Pick a coordinate below and jump anywhere between that day and right now.";
+
+    $("timeline-range").textContent = birthYear + " – " + currentYear;
+    buildTimeline(birthYear, currentYear);
+
+    var slider = $("jump-slider");
+    slider.min = birthMs;
+    slider.max = todayMs;
+    slider.step = DAY_MS;
+    slider.value = todayMs;
+    $("slider-min-label").textContent = birthYear;
+    updateJumpReadout(todayMs);
+    slider.addEventListener("input", function(){ updateJumpReadout(Number(slider.value)); });
+
+    $("btn-engage").onclick = function(){ engageJump(Number(slider.value)); };
+  }
+
+  function updateJumpReadout(ms){
+    $("jump-date-display").textContent = fmtDate(new Date(ms));
+  }
+
+  function buildTimeline(birthYear, currentYear){
+    var items = [];
+    if(birthYear < 1940){
+      items.push({ start:birthYear, end:Math.min(1939,currentYear), label:"UNCHARTED ERA", hasData:false, bucketKey:null, jumpYear:Math.min(1939,currentYear) });
+    }
+    for(var d=1940; d<=2010; d+=10){
+      var dEnd = d+9;
+      var start = Math.max(d, birthYear);
+      var end = Math.min(dEnd, currentYear);
+      if(start <= end && birthYear <= dEnd && currentYear >= d){
+        var key = d+"s";
+        items.push({ start:start, end:end, label:ERA_LABELS[key], hasData:true, bucketKey:key, range:start+"–"+end, jumpYear:start });
+      }
+    }
+    for(var y=2020; y<=2026; y++){
+      if(y >= birthYear && y <= currentYear){
+        items.push({ start:y, end:y, label:ERA_LABELS[String(y)], hasData:true, bucketKey:String(y), range:String(y), jumpYear:y });
+      }
+    }
+    if(currentYear > 2026){
+      items.push({ start:2027, end:currentYear, label:"ARCHIVE PENDING", hasData:false, bucketKey:null, jumpYear:2027 });
+    }
+    items.sort(function(a,b){ return a.start - b.start; });
+
+    var track = $("timeline-track");
+    track.innerHTML = "";
+    items.forEach(function(it, idx){
+      var row = document.createElement(it.hasData ? "button" : "div");
+      row.className = "timeline-item" + (it.hasData ? " clickable" : " nodata") + (it.hasData && idx === items.length-1 && it.end >= currentYear ? " now" : "");
+      var rangeLabel = it.range || (it.start === it.end ? String(it.start) : it.start + "–" + it.end);
+      row.innerHTML =
+        '<span class="t-range">' + rangeLabel + '</span>' +
+        '<span class="t-era">' + it.label + '</span>' +
+        '<span class="t-flag">' + (it.hasData ? (it.hasData && idx === items.length-1 && it.end >= currentYear ? "YOU ARE HERE" : "JUMP") : "NO SIGNAL") + '</span>';
+      if(it.hasData){
+        row.addEventListener("click", function(jy){
+          return function(){
+            var ms = Date.UTC(jy, 0, 2);
+            var slider = $("jump-slider");
+            ms = Math.max(Number(slider.min), Math.min(Number(slider.max), ms));
+            slider.value = ms;
+            updateJumpReadout(ms);
+            engageJump(ms);
+          };
+        }(it.jumpYear));
+      }
+      track.appendChild(row);
+    });
+  }
+
+  /* ---------------- jump + dossier ---------------- */
+  function engageJump(ms){
+    showScreen("screen-transit");
+    window.setTimeout(function(){
+      renderDossier(new Date(ms).getUTCFullYear());
+      showScreen("screen-dossier");
+    }, 900);
+  }
+
+  function renderDossier(year){
+    var bucketKey = getBucketKeyForYear(year);
+    var data = bucketKey ? PH_HISTORY[bucketKey] : null;
+
+    $("dossier-year").textContent = year;
+    $("dossier-era-label").textContent = bucketKey && ERA_LABELS[bucketKey] ? ERA_LABELS[bucketKey] : (year < 1940 ? "NO SIGNAL" : "ARCHIVE PENDING");
+
+    var body = $("dossier-body");
+    var errBox = $("dossier-error");
+
+    if(!data){
+      body.innerHTML = "";
+      body.hidden = true;
+      errBox.hidden = false;
+      $("dossier-error-text").textContent = year < 1940
+        ? "The Protocol's digitized archive only reaches back to 1940. " + year + " sits outside the network — whatever happened there never made it online."
+        : "The archive hasn't been written yet for " + year + ". You've outrun the record.";
+      return;
+    }
+
+    errBox.hidden = true;
+    body.hidden = false;
+
+    function list(items){
+      return "<ul>" + items.map(function(t){ return "<li>" + t + "</li>"; }).join("") + "</ul>";
+    }
+
+    body.innerHTML =
+      '<div class="panel feature amber"><p class="eyebrow">// comms device of the era</p><p class="f-value">' + data.communication_device + '</p></div>' +
+      '<div class="panel feature magenta"><p class="eyebrow">// street-level trend</p><p class="f-value">' + data.trend + '</p></div>' +
+      '<div class="panel factpanel politics"><h3>POLITICS &amp; HISTORY</h3>' + list(data.politics) + '</div>' +
+      '<div class="panel factpanel showbiz"><h3>SHOWBIZ &amp; CULTURE</h3>' + list(data.showbiz) + '</div>' +
+      '<div class="panel factpanel tech"><h3>TECHNOLOGY</h3>' + list(data.technology) + '</div>';
+  }
+
+  /* ---------------- day counter ---------------- */
+  function startDayCounter(){
+    var raw = localStorage.getItem("bbp_counter");
+    var counter = raw ? JSON.parse(raw) : { count:0, lastDate:null };
+    var today = localDateStr(new Date());
+    if(counter.lastDate !== today){
+      counter.count += 1;
+      counter.lastDate = today;
+      localStorage.setItem("bbp_counter", JSON.stringify(counter));
+    }
+    $("stat-days").textContent = counter.count;
+
+    var btn = $("btn-reset-counter");
+    var confirming = false;
+    var revertTimer = null;
+    btn.addEventListener("click", function(){
+      if(!confirming){
+        confirming = true;
+        btn.textContent = "SURE?";
+        btn.classList.add("confirming");
+        revertTimer = window.setTimeout(function(){
+          confirming = false;
+          btn.textContent = "RESET";
+          btn.classList.remove("confirming");
+        }, 3000);
+      } else {
+        window.clearTimeout(revertTimer);
+        confirming = false;
+        btn.textContent = "RESET";
+        btn.classList.remove("confirming");
+        var fresh = { count:0, lastDate:localDateStr(new Date()) };
+        localStorage.setItem("bbp_counter", JSON.stringify(fresh));
+        $("stat-days").textContent = "0";
+      }
+    });
+  }
+
+  /* ---------------- session timer ---------------- */
+  function startSessionTimer(){
+    var stored = sessionStorage.getItem("bbp_session_start");
+    sessionStart = stored ? Number(stored) : Date.now();
+    sessionStorage.setItem("bbp_session_start", String(sessionStart));
+
+    if(timerInterval) window.clearInterval(timerInterval);
+    timerInterval = window.setInterval(tickTimer, 1000);
+    tickTimer();
+  }
+
+  function tickTimer(){
+    var elapsed = Date.now() - sessionStart;
+    var remaining = SESSION_MS - elapsed;
+    var timerEl = $("stat-timer");
+    if(remaining <= 0){
+      timerEl.textContent = "00:00";
+      window.clearInterval(timerInterval);
+      showScreen("screen-timeout");
+      return;
+    }
+    var totalSec = Math.floor(remaining/1000);
+    var mm = String(Math.floor(totalSec/60)).padStart(2,"0");
+    var ss = String(totalSec%60).padStart(2,"0");
+    timerEl.textContent = mm + ":" + ss;
+    timerEl.classList.toggle("warn", totalSec < 300);
+  }
+
+  /* ---------------- wiring ---------------- */
+  $("btn-jump-again").addEventListener("click", function(){ showScreen("screen-home"); });
+  $("btn-return-present").addEventListener("click", function(){
+    var slider = $("jump-slider");
+    slider.value = slider.max;
+    updateJumpReadout(Number(slider.max));
+    showScreen("screen-home");
+  });
+  $("btn-reconnect").addEventListener("click", function(){
+    sessionStorage.setItem("bbp_session_start", String(Date.now()));
+    startSessionTimer();
+    showScreen("screen-home");
+  });
+
+  /* ---------------- boot sequence ---------------- */
+  initBoot();
+  var existingBirth = localStorage.getItem("bbp_birthdate");
+  if(existingBirth){
+    showScreen("screen-home");
+    $("hud-stats").hidden = false;
+    initHome();
+    startDayCounter();
+    startSessionTimer();
+  } else {
+    showScreen("screen-boot");
+  }
+
+})();
+</script>
+
+<script>
+  // ---- native shell wiring (Capacitor) ----
+  document.addEventListener("DOMContentLoaded", function () {
+    if (!window.Capacitor) return;
+
+    try {
+      var Core = window.Capacitor;
+      var StatusBar = Core.Plugins && Core.Plugins.StatusBar;
+      if (StatusBar) {
+        StatusBar.setStyle({ style: "DARK" }).catch(function(){});
+        StatusBar.setBackgroundColor({ color: "#070a12" }).catch(function(){});
+      }
+      var SplashScreen = Core.Plugins && Core.Plugins.SplashScreen;
+      if (SplashScreen) {
+        SplashScreen.hide().catch(function(){});
+      }
+      var App = Core.Plugins && Core.Plugins.App;
+      if (App) {
+        App.addListener("backButton", function () {
+          var current = window.BBP_currentScreen && window.BBP_currentScreen();
+          if (current === "screen-home" || current === "screen-boot" || !current) {
+            App.exitApp();
+          } else {
+            window.BBP_showScreen("screen-home");
+          }
+        });
+      }
+    } catch (e) { /* native shell not present (plain browser preview) */ }
+  });
+</script>
+
+</body>
+</html>
