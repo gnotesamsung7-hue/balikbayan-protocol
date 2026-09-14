@@ -19,10 +19,14 @@
     --cyan:#2fe6ff;
     --magenta:#ff2f9e;
     --amber:#ffb020;
+    --violet:#b26bff;
+    --green:#3ddc84;
     --danger:#ff4d4d;
     --cyan-glow: rgba(47,230,255,.35);
     --magenta-glow: rgba(255,47,158,.35);
     --amber-glow: rgba(255,176,32,.35);
+    --violet-glow: rgba(178,107,255,.35);
+    --green-glow: rgba(61,220,132,.35);
     --font-display:'Iceberg', 'Arial Narrow', sans-serif;
     --font-body:'IBM Plex Sans', system-ui, -apple-system, sans-serif;
     --font-mono:'IBM Plex Mono', ui-monospace, 'Courier New', monospace;
@@ -46,7 +50,7 @@
   button{ font-family:var(--font-mono); cursor:pointer; }
   ::selection{ background:var(--magenta); color:#fff; }
 
-  a:focus-visible, button:focus-visible, input:focus-visible{
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible{
     outline:2px solid var(--cyan);
     outline-offset:2px;
   }
@@ -111,8 +115,13 @@
   .ghost-btn.confirming{ border-color:var(--danger); color:var(--danger); }
 
   /* ---------- layout ---------- */
-  main{ flex:1; display:flex; flex-direction:column; padding:32px 20px calc(60px + var(--safe-bottom)); max-width:980px; width:100%; margin:0 auto; }
+  main{ flex:1; display:flex; flex-direction:column; padding:32px 20px 40px; max-width:980px; width:100%; margin:0 auto; }
   .screen{ display:flex; flex-direction:column; gap:22px; }
+
+  @media (prefers-reduced-motion: no-preference){
+    .screen-anim{ animation: screenIn .35s ease; }
+  }
+  @keyframes screenIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
 
   .eyebrow{
     font-family:var(--font-mono); font-size:.7rem; letter-spacing:.14em; color:var(--cyan);
@@ -152,7 +161,10 @@
   .primary-btn:not(:disabled):hover{ transform:translateY(-1px); box-shadow:0 0 30px var(--cyan-glow); }
   .primary-btn.danger-glow{ background:var(--magenta); color:#2a0016; box-shadow:0 0 22px var(--magenta-glow); }
   .primary-btn.danger-glow:not(:disabled):hover{ box-shadow:0 0 32px var(--magenta-glow); }
+  .primary-btn.violet-glow{ background:var(--violet); color:#1c0733; box-shadow:0 0 22px var(--violet-glow); }
+  .primary-btn.violet-glow:not(:disabled):hover{ box-shadow:0 0 32px var(--violet-glow); }
   .hint{ margin-top:14px; font-family:var(--font-mono); font-size:.78rem; color:var(--danger); }
+  .hint.good{ color:var(--green); }
 
   /* ---------- home ---------- */
   .home-grid{ display:grid; gap:22px; grid-template-columns:1fr; }
@@ -177,6 +189,7 @@
   .timeline-item.nodata .t-era{ color:var(--text-faint); font-style:italic; }
   .timeline-item.nodata .t-flag{ color:var(--danger); }
   .timeline-item.now .t-flag{ color:var(--amber); }
+  .timeline-item.weak .t-flag{ color:var(--violet); }
 
   .jump-panel .slider-row{ display:flex; align-items:center; gap:14px; margin-top:6px; }
   .slider-cap{ font-family:var(--font-mono); font-size:.65rem; color:var(--text-faint); letter-spacing:.08em; white-space:nowrap; }
@@ -206,9 +219,10 @@
   .dossier-header{ display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; }
   .dossier-header h1{ font-size:2.1rem; color:var(--text); }
   #dossier-era-label{ color:var(--amber); font-family:var(--font-mono); font-size:.78rem; letter-spacing:.1em; margin-top:6px; }
+  #dossier-era-label.weak-signal{ color:var(--violet); }
   .dossier-actions{ display:flex; gap:10px; flex-wrap:wrap; }
 
-  .dossier-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; }
+  .dossier-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; position:relative; overflow:hidden; }
   .dossier-grid .feature{ grid-column:span 2; }
   .dossier-grid .factpanel{ grid-column:1 / -1; }
   @media (min-width:560px){
@@ -219,6 +233,16 @@
     .dossier-grid .feature{ grid-column:span 3; }
     .dossier-grid .factpanel{ grid-column:span 2; }
   }
+  @media (prefers-reduced-motion: no-preference){
+    .dossier-grid::after{
+      content:""; position:absolute; left:0; right:0; top:0; height:2px;
+      background:linear-gradient(90deg, transparent, var(--cyan), transparent);
+      box-shadow:0 0 10px var(--cyan-glow);
+      animation: sweep .9s ease-out;
+      pointer-events:none;
+    }
+  }
+  @keyframes sweep{ from{ top:0; opacity:1; } to{ top:100%; opacity:0; } }
 
   .feature{ padding:20px; }
   .feature .eyebrow{ margin-bottom:6px; }
@@ -235,9 +259,207 @@
   .factpanel.politics::before{ background:var(--cyan); box-shadow:0 0 8px var(--cyan-glow); }
   .factpanel.showbiz::before{ background:var(--magenta); box-shadow:0 0 8px var(--magenta-glow); }
   .factpanel.tech::before{ background:var(--amber); box-shadow:0 0 8px var(--amber-glow); }
+  .factpanel.culture::before{ background:var(--violet); box-shadow:0 0 8px var(--violet-glow); }
 
   .error-panel h2{ color:var(--danger); font-size:1.4rem; margin:6px 0 14px; }
   .error-panel::before{ background:var(--danger); box-shadow:0 0 8px rgba(255,77,77,.4); }
+
+  /* ---------- daily headline + trending ticker ---------- */
+  .headline-panel::before{ background:var(--danger); box-shadow:0 0 8px rgba(255,77,77,.4); }
+  .headline-panel.observance::before{ background:var(--amber); box-shadow:0 0 8px var(--amber-glow); }
+  .headline-panel h2{ font-size:1.25rem; margin:6px 0 10px; color:var(--text); line-height:1.35; }
+  .ticker-wrap{
+    overflow:hidden; border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    background:var(--bg-panel); padding:11px 0; white-space:nowrap;
+  }
+  .ticker-track{ display:inline-block; white-space:nowrap; }
+  .ticker-track span{
+    display:inline-block; padding-left:100%; font-family:var(--font-mono); font-size:.76rem;
+    letter-spacing:.03em; color:var(--cyan);
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .ticker-track{ animation-name:ticker-scroll; animation-timing-function:linear; animation-iteration-count:infinite; }
+  }
+  @keyframes ticker-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-100%); } }
+
+  .headline-source{ margin-top:14px; }
+  .headline-source a{
+    display:inline-block; font-family:var(--font-mono); font-size:.74rem; letter-spacing:.06em; color:var(--danger);
+    text-decoration:none; border:1px solid var(--danger); padding:8px 12px;
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  }
+  .headline-panel.observance .headline-source a{ color:var(--amber); border-color:var(--amber); }
+  .headline-source-meta{ display:block; margin-top:8px; font-family:var(--font-mono); font-size:.66rem; color:var(--text-faint); line-height:1.6; }
+  .headline-source.error-log{
+    font-family:var(--font-mono); font-size:.7rem; color:var(--text-faint); line-height:1.65; white-space:pre-wrap;
+    background:rgba(255,77,77,.06); border:1px solid var(--line); padding:10px 12px;
+  }
+
+  /* ---------- morning briefing / the pulse / anachronist's warning ---------- */
+  .morning-panel::before{ background:var(--green); box-shadow:0 0 8px var(--green-glow); }
+  .morning-panel h2{ font-size:1.05rem; margin:6px 0 12px; color:var(--green); letter-spacing:.04em; }
+  .morning-panel .body-text{ margin-bottom:8px; }
+  .morning-panel .morning-suggestion-text{ color:var(--amber); font-weight:500; }
+  .morning-panel .hint{ color:var(--text-faint); margin-top:10px; }
+
+  .economy-panel::before{ background:var(--violet); box-shadow:0 0 8px var(--violet-glow); }
+  .econ-row{ margin-bottom:16px; }
+  .econ-row:last-child{ margin-bottom:0; }
+  .econ-label{ display:block; font-family:var(--font-mono); font-size:.66rem; letter-spacing:.12em; color:var(--text-faint); margin-bottom:4px; }
+  .econ-row .body-text{ margin:0; }
+  .econ-source{ margin-top:6px; font-family:var(--font-mono); font-size:.66rem; color:var(--text-faint); line-height:1.6; }
+  .econ-source a{ color:var(--violet); text-decoration:none; }
+  .feature.cyan .eyebrow{ color:var(--cyan); }
+  .feature.cyan::before{ background:var(--cyan); box-shadow:0 0 8px var(--cyan-glow); }
+  .feature.cyan a{ color:var(--cyan); text-decoration:none; }
+
+  .pulse-panel::before{ background:var(--cyan); box-shadow:0 0 8px var(--cyan-glow); }
+  .pulse-list{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:14px; }
+  .pulse-list li{ font-size:.88rem; line-height:1.6; color:var(--text); padding-left:64px; position:relative; min-height:18px; }
+  .pulse-list li::before{
+    position:absolute; left:0; top:1px; font-family:var(--font-mono); font-size:.62rem; letter-spacing:.06em;
+  }
+  #pulse-political::before{ content:"POL ›"; color:var(--cyan); }
+  #pulse-cultural::before{ content:"CULT ›"; color:var(--magenta); }
+  #pulse-tech::before{ content:"TECH ›"; color:var(--amber); }
+
+  .anachronism-panel::before{ background:var(--magenta); box-shadow:0 0 8px var(--magenta-glow); }
+  .anachronism-panel h2{ font-size:1rem; margin:6px 0 10px; color:var(--magenta); letter-spacing:.08em; }
+
+  /* ---------- quiz + journal + butterfly CTAs on dossier ---------- */
+  .quiz-cta::before, .journal-cta::before, .butterfly-cta::before{ background:var(--violet); box-shadow:0 0 8px var(--violet-glow); }
+  .journal-input{
+    width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text);
+    font-family:var(--font-body); font-size:.9rem; line-height:1.5; padding:12px 14px; margin-top:8px; resize:vertical;
+  }
+  .journal-input:focus{ border-color:var(--violet); }
+
+  /* ---------- quiz screen ---------- */
+  .quiz-panel::before{ background:var(--violet); box-shadow:0 0 8px var(--violet-glow); }
+  .quiz-progress{ font-family:var(--font-mono); font-size:.7rem; letter-spacing:.1em; color:var(--text-faint); margin-bottom:10px; }
+  .quiz-panel h2{ font-size:1.15rem; color:var(--text); line-height:1.4; margin-bottom:4px; }
+  .quiz-options{ display:flex; flex-direction:column; gap:10px; margin-top:18px; }
+  .quiz-option{
+    text-align:left; background:var(--bg-raised); border:1px solid var(--line); color:var(--text);
+    padding:14px 16px; font-family:var(--font-body); font-size:.86rem; line-height:1.45;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    transition:border-color .15s, background .15s;
+  }
+  .quiz-option:hover:not(:disabled){ border-color:var(--violet); }
+  .quiz-option.correct{ border-color:var(--green); background:rgba(61,220,132,.1); }
+  .quiz-option.wrong{ border-color:var(--danger); background:rgba(255,77,77,.1); }
+  .quiz-option:disabled{ cursor:default; }
+  .quiz-result h2{ font-size:1.6rem; margin:6px 0 18px; color:var(--text); }
+
+  /* ---------- butterfly effect simulator ---------- */
+  .bfly-header::before, .bfly-anchor::before{ background:var(--violet); box-shadow:0 0 8px var(--violet-glow); }
+  .bfly-tweak-row{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+  .bfly-tweak-row .ghost-btn.active{ border-color:var(--violet); color:var(--violet); }
+  .bfly-tree{ display:flex; flex-direction:column; gap:10px; }
+  .bfly-node{
+    background:var(--bg-raised); border:1px solid var(--line); padding:14px 16px;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  }
+  .bfly-node[data-branch]{ cursor:pointer; }
+  .bfly-node-label{ font-family:var(--font-mono); font-size:.64rem; letter-spacing:.1em; color:var(--violet); margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
+  .bfly-node-text{ font-size:.85rem; line-height:1.5; color:var(--text); }
+  .bfly-caret{ transition:transform .2s; color:var(--text-faint); }
+  .bfly-node.expanded .bfly-caret{ transform:rotate(90deg); color:var(--violet); }
+  .bfly-root{ border-color:var(--cyan); }
+  .bfly-root .bfly-node-label{ color:var(--cyan); }
+  .bfly-children{
+    margin-left:20px; border-left:2px dashed var(--line); padding-left:16px; margin-top:10px;
+    display:flex; flex-direction:column; gap:10px; overflow:hidden;
+    max-height:1000px; opacity:1; transition:max-height .3s ease, opacity .3s ease, margin-top .3s ease;
+  }
+  .bfly-children.collapsed{ max-height:0; opacity:0; margin-top:0; }
+  .bfly-leaf .bfly-node-label{ color:var(--amber); }
+
+  /* ---------- logbook ---------- */
+  .logbook-list{ display:flex; flex-direction:column; gap:14px; }
+  .journal-entry::before{ background:var(--violet); box-shadow:0 0 8px var(--violet-glow); }
+  .je-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+  .je-year{ font-family:var(--font-mono); color:var(--amber); font-size:1rem; }
+  .je-era{ font-family:var(--font-mono); font-size:.64rem; letter-spacing:.08em; color:var(--text-faint); flex:1; }
+  .je-text{ color:var(--text); font-size:.87rem; line-height:1.55; white-space:pre-wrap; }
+  .je-ts{ margin-top:10px; font-family:var(--font-mono); font-size:.6rem; color:var(--text-faint); }
+
+  /* ---------- archive / achievements ---------- */
+  .archive-stats{ display:flex; gap:26px; flex-wrap:wrap; }
+  .archive-stats::before{ background:var(--violet); box-shadow:0 0 8px var(--violet-glow); }
+  .archive-stats .stat{ align-items:flex-start; }
+  .badge-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:14px; }
+  .badge{ padding:18px; }
+  .badge::before{ background:var(--violet); box-shadow:0 0 8px var(--violet-glow); }
+  .badge.locked{ opacity:.5; }
+  .badge.locked::before{ background:var(--text-faint); box-shadow:none; }
+  .badge-label{ font-family:var(--font-mono); font-size:.7rem; letter-spacing:.08em; color:var(--violet); margin-bottom:8px; }
+  .badge.locked .badge-label{ color:var(--text-faint); }
+  .badge-desc{ font-size:.78rem; color:var(--text-dim); line-height:1.45; }
+
+  /* ---------- landmark gallery ---------- */
+  .gallery-list{ display:flex; flex-direction:column; gap:14px; }
+  .gallery-card{ display:flex; gap:16px; align-items:center; cursor:pointer; padding:18px; transition:border-color .15s; }
+  .gallery-card:hover{ border-color:var(--cyan); }
+  .gallery-card::before{ background:var(--cyan); box-shadow:0 0 8px var(--cyan-glow); }
+  .gallery-card-thumb{ width:64px; height:64px; object-fit:cover; border:1px solid var(--line); flex-shrink:0; background:var(--bg); }
+  .gallery-card-info h3{ font-size:1rem; margin-bottom:4px; }
+  .gallery-card-info p{ font-size:.78rem; color:var(--text-dim); }
+  .gallery-detail::before{ background:var(--cyan); box-shadow:0 0 8px var(--cyan-glow); }
+  .gallery-detail-tabs{ display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
+  .gallery-tab{
+    background:var(--bg-raised); border:1px solid var(--line); color:var(--text-dim);
+    padding:8px 14px; font-family:var(--font-mono); font-size:.66rem; letter-spacing:.08em;
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  }
+  .gallery-tab.active{ border-color:var(--amber); color:var(--amber); }
+  .gallery-photo-frame{
+    width:100%; aspect-ratio:4/3; background:var(--bg); border:1px solid var(--line);
+    overflow:hidden; position:relative; margin-top:16px;
+  }
+  .gallery-photo-frame img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .gallery-photo-fallback{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:6px; font-family:var(--font-mono); font-size:.7rem; color:var(--text-faint);
+    text-align:center; padding:20px;
+  }
+  .gallery-caption{ margin-top:14px; font-size:.85rem; color:var(--text); line-height:1.55; }
+  .gallery-credit{ margin-top:8px; font-family:var(--font-mono); font-size:.62rem; color:var(--text-faint); line-height:1.6; }
+  .gallery-credit a{ color:var(--cyan); }
+  .gallery-video-block{ margin-top:18px; }
+  .gallery-video-block .ghost-btn{ text-decoration:none; display:inline-block; margin-top:8px; }
+  .gallery-error-log{
+    font-family:var(--font-mono); font-size:.72rem; color:var(--danger); line-height:1.65; white-space:pre-wrap;
+    background:rgba(255,77,77,.08); border:1px solid var(--danger); padding:12px 14px; margin-top:8px;
+  }
+
+  /* ---------- nav bar ---------- */
+  .nav-bar{
+    position:sticky; bottom:0; z-index:20; display:flex;
+    border-top:1px solid var(--line); background:rgba(7,10,18,.92); backdrop-filter:blur(6px);
+    padding-bottom:var(--safe-bottom);
+  }
+  .nav-item{
+    flex:1; background:none; border:none; color:var(--text-faint);
+    font-family:var(--font-mono); font-size:.66rem; letter-spacing:.1em; padding:14px 6px;
+    transition:color .15s;
+  }
+  .nav-item.active{ color:var(--cyan); text-shadow:0 0 8px var(--cyan-glow); }
+  .nav-item:hover{ color:var(--text-dim); }
+
+  /* ---------- achievement toast ---------- */
+  .achv-toast{
+    position:fixed; top:calc(12px + var(--safe-top)); left:50%; transform:translateX(-50%); z-index:60;
+    background:var(--bg-raised); border:1px solid var(--violet); padding:12px 22px; text-align:center;
+    clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+    box-shadow:0 0 26px var(--violet-glow); max-width:88vw;
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .achv-toast{ animation: toastIn .3s ease; }
+  }
+  @keyframes toastIn{ from{ opacity:0; transform:translate(-50%,-16px); } to{ opacity:1; transform:translate(-50%,0); } }
+  .achv-toast-label{ font-family:var(--font-mono); font-size:.6rem; letter-spacing:.14em; color:var(--violet); margin-bottom:4px; }
+  .achv-toast-name{ font-family:var(--font-display); font-size:1.05rem; color:var(--text); }
 
   /* ---------- timeout ---------- */
   #screen-timeout{ align-items:center; padding-top:10vh; }
@@ -268,6 +490,10 @@
 
 <div id="crt-overlay"></div>
 <div id="vignette"></div>
+<div id="achievement-toast" class="achv-toast" hidden>
+  <p class="achv-toast-label">// ACHIEVEMENT UNLOCKED</p>
+  <p class="achv-toast-name" id="achv-toast-name"></p>
+</div>
 <div id="app">
   <header id="hud">
     <div class="hud-left">
@@ -292,7 +518,7 @@
       <div class="panel boot-panel">
         <p class="eyebrow">// first sync required</p>
         <h1 class="glitch" data-text="ORIGIN LOCK">ORIGIN LOCK</h1>
-        <p class="body-text">Before you can jack into the timestream, the Protocol needs your origin coordinate — the date you were born. It's the hard floor of every jump: you can ride the stream back that far and not one day further.</p>
+        <p class="body-text">Before you can jack into the timestream, the Protocol needs your origin coordinate — the date you were born (or the date of anyone whose life you want to trace). It's the hard floor of every jump: you can ride the stream back that far and not one day further.</p>
         <label class="field-label" for="input-birthdate">DATE OF ORIGIN</label>
         <input type="date" id="input-birthdate" class="date-input">
         <button id="btn-confirm-birthdate" class="primary-btn" disabled>LOCK ORIGIN</button>
@@ -349,12 +575,162 @@
         </div>
       </div>
 
+      <div id="dossier-morning" class="panel morning-panel" hidden>
+        <p class="eyebrow" id="morning-eyebrow">// morning briefing</p>
+        <h2 id="morning-headline"></h2>
+        <p class="body-text" id="morning-atmosphere"></p>
+        <p class="body-text" id="morning-scene"></p>
+        <p class="body-text morning-suggestion-text" id="morning-suggestion"></p>
+        <p class="hint" id="morning-disclaimer">Atmospheric scene-setting based on general Philippine seasonal patterns for this month — not an actual recorded forecast.</p>
+      </div>
+
+      <div id="dossier-economy" class="panel economy-panel" hidden>
+        <p class="eyebrow">// economic snapshot</p>
+        <div class="econ-row">
+          <span class="econ-label">FUEL PRICES</span>
+          <p class="body-text" id="economy-fuel-text"></p>
+          <div id="economy-fuel-source" class="econ-source"></div>
+        </div>
+        <div class="econ-row">
+          <span class="econ-label">PESO / U.S. DOLLAR</span>
+          <p class="body-text" id="economy-fx-text"></p>
+          <div id="economy-fx-source" class="econ-source"></div>
+        </div>
+      </div>
+
+      <div id="dossier-headline" class="panel headline-panel" hidden>
+        <p class="eyebrow" id="headline-tag">// breaking</p>
+        <h2 id="headline-text"></h2>
+        <p class="body-text" id="headline-detail"></p>
+        <div id="headline-inquirer" class="headline-source"></div>
+      </div>
+
+      <div id="dossier-ticker" class="ticker-wrap" hidden>
+        <div class="ticker-track" id="ticker-track"><span id="ticker-content"></span></div>
+      </div>
+
+      <div id="dossier-pulse" class="panel pulse-panel" hidden>
+        <p class="eyebrow">// the pulse — what's moving through society</p>
+        <ul class="pulse-list">
+          <li id="pulse-political"></li>
+          <li id="pulse-cultural"></li>
+          <li id="pulse-tech"></li>
+        </ul>
+      </div>
+
+      <div id="dossier-anachronism" class="panel anachronism-panel" hidden>
+        <p class="eyebrow">// anachronist's warning</p>
+        <h2>DON'T STAND OUT</h2>
+        <p class="body-text" id="anachronism-text"></p>
+      </div>
+
       <div id="dossier-body" class="dossier-grid"></div>
 
       <div id="dossier-error" class="panel error-panel" hidden>
         <p class="eyebrow">// signal lost</p>
         <h2>ARCHIVE UNAVAILABLE</h2>
         <p class="body-text" id="dossier-error-text"></p>
+      </div>
+
+      <div id="dossier-quiz-cta" class="panel quiz-cta" hidden>
+        <p class="eyebrow">// knowledge check</p>
+        <p class="body-text">Run a short diagnostic to test what you just pulled from the archive.</p>
+        <button id="btn-run-quiz" class="primary-btn violet-glow">RUN DIAGNOSTIC</button>
+      </div>
+
+      <div id="dossier-journal-cta" class="panel journal-cta" hidden>
+        <p class="eyebrow">// field notes</p>
+        <label class="field-label" for="journal-input">LOG A NOTE FOR THIS JUMP</label>
+        <textarea id="journal-input" class="journal-input" rows="3" placeholder="What do you make of this era?"></textarea>
+        <button id="btn-save-journal" class="primary-btn violet-glow">SAVE ENTRY</button>
+        <p class="hint good" id="journal-saved-hint" hidden>Logged. Check your LOGBOOK.</p>
+      </div>
+
+      <div id="dossier-butterfly-cta" class="panel butterfly-cta" hidden>
+        <p class="eyebrow">// butterfly effect</p>
+        <p class="body-text">Tweak this moment and watch a speculative branch of consequences unfold. A thought experiment only — not a real prediction.</p>
+        <button id="btn-run-butterfly" class="primary-btn violet-glow">SIMULATE BUTTERFLY EFFECT</button>
+      </div>
+    </section>
+
+    <section id="screen-butterfly" class="screen" hidden>
+      <div class="panel bfly-header">
+        <p class="eyebrow">// butterfly effect simulator</p>
+        <h1 id="bfly-era-label">—</h1>
+        <p class="body-text">Speculative branching only. This traces a hypothetical "what if" through fictional ripple effects — it is not a historical claim or a prediction.</p>
+      </div>
+      <div class="panel bfly-anchor">
+        <p class="eyebrow">// anchor moment (as it actually happened)</p>
+        <p class="body-text" id="bfly-anchor-text"></p>
+        <div class="bfly-tweak-row">
+          <button id="bfly-btn-reverse" class="ghost-btn">◂ REVERSE THE OUTCOME</button>
+          <button id="bfly-btn-amplify" class="ghost-btn">AMPLIFY THE OUTCOME ▸</button>
+        </div>
+      </div>
+      <div id="bfly-tree" class="bfly-tree" hidden></div>
+      <div class="dossier-actions">
+        <button id="btn-bfly-back" class="ghost-btn">BACK TO DOSSIER</button>
+      </div>
+    </section>
+
+    <section id="screen-quiz" class="screen" hidden>
+      <div class="panel quiz-panel">
+        <p class="eyebrow">// diagnostic — <span id="quiz-era-label"></span></p>
+        <p class="quiz-progress" id="quiz-progress"></p>
+        <h2 id="quiz-question-label">Which of these actually happened?</h2>
+        <div id="quiz-options" class="quiz-options"></div>
+        <div id="quiz-result" class="quiz-result" hidden>
+          <p class="eyebrow">// diagnostic complete</p>
+          <h2 id="quiz-score-text"></h2>
+          <button id="btn-quiz-done" class="primary-btn violet-glow">BACK TO DOSSIER</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-logbook" class="screen" hidden>
+      <div class="panel">
+        <p class="eyebrow">// field notes archive</p>
+        <h1>LOGBOOK</h1>
+        <p class="body-text">Personal notes you've logged after each jump. Stored only on this device.</p>
+      </div>
+      <div id="logbook-list" class="logbook-list"></div>
+      <div id="logbook-empty" class="panel" hidden>
+        <p class="body-text">No entries yet. Jump somewhere and leave a field note from the dossier screen.</p>
+      </div>
+    </section>
+
+    <section id="screen-archive" class="screen" hidden>
+      <div class="panel">
+        <p class="eyebrow">// operator record</p>
+        <h1>ARCHIVE</h1>
+        <p class="body-text">Badges unlock as you explore the timestream. Locked ones stay classified until you earn them.</p>
+      </div>
+      <div id="archive-stats" class="archive-stats panel"></div>
+      <div id="badge-grid" class="badge-grid"></div>
+    </section>
+
+    <section id="screen-gallery" class="screen" hidden>
+      <div class="panel">
+        <p class="eyebrow">// landmark archive</p>
+        <h1>PHOTO GALLERY</h1>
+        <p class="body-text">Real archival and modern photographs of Philippine landmarks, each credited to its source. These load from the open web, so this is the one part of the Protocol that needs a live connection.</p>
+      </div>
+      <div id="gallery-list" class="gallery-list"></div>
+      <div id="gallery-detail" class="panel gallery-detail" hidden>
+        <button id="btn-gallery-back-list" class="ghost-btn">‹ ALL LANDMARKS</button>
+        <h2 id="gallery-detail-name" style="margin-top:14px;"></h2>
+        <p class="body-text" id="gallery-detail-blurb"></p>
+        <div id="gallery-tabs" class="gallery-detail-tabs"></div>
+        <div class="gallery-photo-frame">
+          <img id="gallery-photo-img" alt="">
+          <div id="gallery-photo-fallback" class="gallery-photo-fallback" hidden>
+            <span>[ SIGNAL LOST ]</span>
+            <span>Couldn't load this image — check your connection.</span>
+          </div>
+        </div>
+        <p class="gallery-caption" id="gallery-photo-caption"></p>
+        <p class="gallery-credit" id="gallery-photo-credit"></p>
+        <div class="gallery-video-block" id="gallery-video-block"></div>
       </div>
     </section>
 
@@ -369,8 +745,15 @@
 
   </main>
 
+  <nav id="nav-bar" class="nav-bar" hidden>
+    <button class="nav-item" data-screen="screen-home">HOME</button>
+    <button class="nav-item" data-screen="screen-gallery">GALLERY</button>
+    <button class="nav-item" data-screen="screen-logbook">LOGBOOK</button>
+    <button class="nav-item" data-screen="screen-archive">ARCHIVE</button>
+  </nav>
+
   <footer id="footer-note">
-    <p>ARCHIVE SOURCE: curated Philippine history compilation spanning the 1940s–2026 · politics, showbiz, technology, everyday communication, and street-level trend, per era. Coverage thins before 1940 and beyond the present day.</p>
+    <p>ARCHIVE SOURCE: curated Philippine history compilation spanning 1900–2026 (fragmentary before 1940) — politics, showbiz, technology, music, slang, fuel prices, peso/dollar exchange rates, and street-level trend, per era, each with a "verify the record" link to Wikipedia or the original news source. Includes a diagnostic quiz, a personal logbook, unlockable archive badges, a speculative butterfly-effect branch simulator (fictional "what if" thought experiments, not historical claims), a credited landmark photo gallery sourced from Wikimedia Commons, daily headlines with real INQUIRER.net sourcing where available, and a POV morning briefing with an era-appropriate suggestion for what to do that day.</p>
   </footer>
 </div>
 
@@ -379,29 +762,32 @@
   "use strict";
 
   var PH_HISTORY = {
-    "1940s": { politics:["The Philippines suffered brutal Japanese occupation from 1942–1945, including the Bataan Death March and the devastating 1945 Battle of Manila.","The Philippines gained full independence from the United States on July 4, 1946, with Manuel Roxas as the first president of the Third Republic.","Post-war reconstruction began under presidents Roxas and Elpidio Quirino amid Huk rebellion unrest in Central Luzon."], showbiz:["Sampaguita Pictures and LVN Pictures dominated a booming post-war Filipino movie studio era.","Kundiman (traditional Filipino love ballads) and balladeers like Ruben Tagalog were hugely popular on radio.","Radio drama serials (radyo nobela) were the main mass entertainment format for Filipino families."], technology:["AM radio became the primary mass medium for news and entertainment across the archipelago.","War-surplus jeeps were converted into the first jeepneys, which became the iconic Philippine mode of transport."], communication_device:"Letters and telegrams — only wealthy households or offices had landline telephones.", trend:"Ternos and Americana-style suits mixed with wartime-influenced fashion as the country rebuilt after WWII." },
-    "1950s": { politics:["Ramon Magsaysay won the presidency in 1953 on a hugely popular anti-corruption, pro-farmer platform and suppressed the Huk rebellion.","Magsaysay died in a plane crash in Cebu in 1957, plunging the nation into mourning; Carlos P. Garcia succeeded him.","Garcia's 'Filipino First' policy promoted Filipino-owned businesses over foreign interests."], showbiz:["Filipino movie studios' golden age flourished, led by stars like Rogelio de la Rosa and Gloria Romero.","Rock and roll and American pop music began influencing Filipino youth via radio and jukeboxes.","Sampaguita and LVN Pictures released dozens of films a year, cementing a local star system."], technology:["Television arrived in the Philippines in 1953 with the launch of DZAQ-TV (later ABS-CBN), the first in Southeast Asia.","Household appliances like refrigerators and radios became more common in urban middle-class homes."], communication_device:"Landline telephones for the elite and businesses — most ordinary Filipinos still relied on letters and word of mouth.", trend:"Rock and roll dance crazes and American-style fashion caught on among Manila's youth." },
-    "1960s": { politics:["Diosdado Macapagal became president in 1961 and moved Independence Day observance to June 12 to honor the 1898 declaration.","Ferdinand Marcos was elected president in 1965, promising infrastructure and progress.","Marcos won re-election in 1969 amid growing student activism and the First Quarter Storm protest movement."], showbiz:["Nora Aunor and Vilma Santos rose to fame as teen singing and acting idols, becoming lifelong rival superstars.","Pilita Corrales became known as the 'Asia's Queen of Songs' with regional hit records.","Local rock bands and pop combos flourished alongside the Beatles-driven 'Beatlemania' craze."], technology:["Television ownership expanded rapidly in Manila and nearby provinces through the decade.","Transistor radios became widely affordable, bringing music and news to remote barrios."], communication_device:"Transistor radios for news and landline phones in the cities — barrio residents still relied on letters and personal messengers.", trend:"Beatlemania, mini-skirts, and rock-and-roll dance crazes swept Filipino youth culture." },
-    "1970s": { politics:["President Marcos declared Martial Law on September 21–23, 1972, suspending civil liberties and beginning over a decade of authoritarian rule.","A new 1973 Constitution let Marcos stay in power indefinitely, and press freedom was curtailed with media outlets shut down.","Marcos nominally ended Martial Law in 1981 but retained emergency powers; opposition figure Ninoy Aquino Jr. was imprisoned for years."], showbiz:["Bomba (soft-core) films and action movies flourished even under censorship, alongside the rise of the Manila Film Festival.","Nora Aunor and Vilma Santos remained top box-office draws; the Manila Sound genre (Hotdog, VST & Company) defined 70s OPM.","Eat Bulaga! (1979) launched as a pioneering noontime variety show alongside the long-running Student Canteen."], technology:["Color television broadcasting began reaching Filipino households in the mid-1970s.","Direct-dial domestic long-distance telephone service expanded between major Philippine cities."], communication_device:"Landline telephones (party lines common) in cities and telegrams for urgent long-distance messages — many rural areas still relied on letters.", trend:"The 'Manila Sound' disco and bell-bottom fashion defined youth style, alongside platform shoes and psychedelic prints." },
-    "1980s": { politics:["Ninoy Aquino was assassinated at Manila International Airport on August 21, 1983, galvanizing the anti-Marcos opposition.","The People Power (EDSA) Revolution in February 1986 peacefully toppled the 20-year Marcos dictatorship and installed Corazon Aquino as president.","President Aquino survived several coup attempts and promulgated a new 1987 Constitution restoring democratic institutions."], showbiz:["Sharon Cuneta became the 'Megastar' with a string of blockbuster teen romance films.","The noontime show wars intensified between Eat Bulaga! and It's Showtime predecessors.","OPM flourished with icons like Freddie Aguilar ('Anak') and the Apo Hiking Society."], technology:["Betamax and VHS home video players became common, spreading pirated and licensed movies to households.","Cable television and the first computer stores began appearing in Metro Manila."], communication_device:"Landline telephones were the household standard, alongside public payphones and the first pagers/beepers for professionals late in the decade.", trend:"Big hair, shoulder pads, and 'jeprox/jologs' slang emerged, along with breakdancing and New Wave fashion." },
-    "1990s": { politics:["Fidel V. Ramos became president in 1992, ushering in economic reforms and 'Philippines 2000' growth ambitions.","Joseph 'Erap' Estrada, a popular former action star, won a landslide presidential victory in 1998.","The Mount Pinatubo eruption in 1991 was one of the largest volcanic eruptions of the 20th century, and the US bases at Clark and Subic closed in 1991–92."], showbiz:["The FPJ-led action film era continued while Regine Velasquez and the 'OPM divas' dominated the charts.","ABS-CBN's Ang TV and later teleseryes/game shows reshaped local TV after the network's 1992 post-EDSA revival.","Boy bands, girl groups, and karaoke culture boomed nationwide."], technology:["Mobile (cellular) phones and pagers/beepers became status symbols for professionals in the early-to-mid 90s.","The Philippines got its first public internet access in 1994, and Filipinos became avid early adopters of SMS texting by the late 1990s."], communication_device:"Pagers and beepers in the early 90s, giving way rapidly to cellular phones with SMS texting by the late 1990s.", trend:"SMS/texting culture exploded as a national pastime, alongside karaoke (videoke) nights and 'jeje/jologs' slang." },
-    "2000s": { politics:["The Second EDSA Revolution (EDSA II) in January 2001 ousted President Estrada over corruption, installing Gloria Macapagal-Arroyo.","Arroyo won a contested 2004 election and survived numerous coup attempts and the 'Hello Garci' election-rigging scandal in 2005.","The 2009 Maguindanao Massacre, one of the deadliest attacks on journalists in history, shocked the nation."], showbiz:["Teleseryes like Marimar and Pangako Sa 'Yo became massive national hits; Kris Aquino ruled daytime TV.","Reality/talent shows Pinoy Big Brother (2005) and Philippine Idol captivated audiences.","ASAP and Wowowee-style noontime shows drew huge live studio crowds and controversy."], technology:["SMS texting became ubiquitous and even fueled political mobilization (the EDSA II 'text brigades').","Internet cafes proliferated nationwide, and Friendster became the first massively popular social network among Filipinos."], communication_device:"Cellular phones with SMS texting were the dominant everyday communication method for most Filipinos.", trend:"Text messaging slang ('txt speak'), Friendster profile culture, and the 'Wowowee' noontime show craze defined the era." },
-    "2010s": { politics:["Benigno 'Noynoy' Aquino III was elected president in 2010 on an anti-corruption 'Daang Matuwid' platform.","Rodrigo Duterte won the presidency in 2016 and launched a controversial and deadly 'war on drugs' campaign.","Typhoon Yolanda (Haiyan) devastated the Visayas in 2013, becoming one of the deadliest typhoons in Philippine history."], showbiz:["Teleseryes like Ang Probinsyano and romance films dominated ratings and box office.","K-pop and Korean dramas surged in popularity alongside homegrown love teams like KathNiel and JaDine.","Vice Ganda became one of the country's biggest comedy stars, hosting It's Showtime."], technology:["Smartphones became mainstream and affordable, and Facebook became the dominant social platform ('Facebook capital of the world').","4G/LTE mobile internet rollout and the rise of ride-hailing apps like Grab transformed daily life."], communication_device:"Smartphones using Facebook Messenger and mobile data became the everyday way Filipinos communicated, alongside continued SMS use.", trend:"Viral Facebook memes, K-pop fandom culture, and dance-craze videos defined youth pop culture." },
-    "2020": { politics:["President Duterte declared a nationwide COVID-19 lockdown starting mid-March 2020, among the world's longest and strictest.","Congress denied ABS-CBN's broadcast franchise renewal in July 2020, forcing the shutdown of the country's largest network.","The Anti-Terrorism Act of 2020 was signed into law, sparking major human-rights concerns and protests."], showbiz:["ABS-CBN's shutdown forced its stars and shows onto digital/cable platforms and rival network GMA.","Online concerts and livestream shows became the norm as venues closed due to the pandemic.","Teleseryes and noontime shows adapted to 'bubble' production setups with strict health protocols."], technology:["Video conferencing (Zoom, Google Meet) and online learning platforms became essential overnight.","E-commerce and food delivery apps (Lazada, Shopee, GrabFood) saw explosive growth as Filipinos stayed home."], communication_device:"Smartphones with Facebook Messenger, plus new heavy reliance on Zoom and Google Meet for video calls during lockdown.", trend:"Pandemic-era trends like Dalgona coffee, banana bread baking, and viral TikTok dance challenges took over." },
-    "2021": { politics:["The Philippines rolled out its national COVID-19 vaccination program starting March 2021 amid supply shortages and public hesitancy.","The country continued cycling through quarantine levels as new COVID variants like Delta emerged.","Political maneuvering intensified ahead of the 2022 elections, with Duterte's PDP-Laban party fracturing over succession plans."], showbiz:["Streaming platforms Netflix and Disney+ grew rapidly in Philippine adoption as local content moved online.","It's Showtime and Eat Bulaga! continued as top-rated noontime shows despite pandemic-limited audiences.","Filipino online content creators and vloggers surged in popularity as YouTube and TikTok became mainstream entertainment."], technology:["Digital payment apps like GCash and Maya saw massive adoption growth as Filipinos shifted to cashless transactions.","5G mobile network rollout began in select Metro Manila areas by major telcos Globe and Smart."], communication_device:"Smartphones with Facebook Messenger and GCash for both chatting and payments became central to daily life.", trend:"TikTok dance trends, viral challenges, and OPM revival songs like 'Pantropiko' dominated social feeds." },
-    "2022": { politics:["Ferdinand 'Bongbong' Marcos Jr. won a landslide victory in the May 2022 presidential election, with Sara Duterte as vice president.","The Philippines lifted most COVID-19 restrictions and reopened its economy and international borders through the year.","President Marcos Jr. pursued closer ties with the US while continuing to navigate tensions with China in the West Philippine Sea."], showbiz:["Streaming and social media further disrupted traditional TV as GMA Network and digital-first Kapamilya Online Live competed for viewers post-ABS-CBN shutdown.","OPM saw a resurgence of city pop and 'sad songs' viral hits on Spotify and TikTok among Gen Z listeners.","Philippine cinema rebounded with hits in the Metro Manila Film Festival as theaters reopened."], technology:["5G network coverage expanded significantly across major Philippine cities.","Electric vehicles and e-trikes began gaining traction as the government pushed green transport initiatives."], communication_device:"Smartphones with Facebook Messenger remained dominant, with growing use of GCash and Viber for chats and payments.", trend:"TikTok-driven OPM revival, 'rizz'-style Gen Z slang, and viral election-season memes defined the year." },
-    "2023": { politics:["Tensions escalated in the West Philippine Sea, with repeated Chinese coast guard water-cannon and laser incidents against Philippine vessels near Ayungin Shoal.","President Marcos Jr. strengthened Philippines–US military cooperation, adding new EDCA sites for US troop access.","The political alliance between the Marcos and Duterte camps began visibly fraying over drug-war probes and policy differences."], showbiz:["Filipino films and teleseryes continued streaming-platform expansion via Netflix, iWantTFC, and GMA's streaming service.","Sarah Geronimo, Regine Velasquez, and other veteran singers held blockbuster reunion concerts as live events fully returned post-pandemic.","Local remakes and Korean drama-inspired teleseryes remained hugely popular."], technology:["AI tools like ChatGPT gained widespread public and business use in the Philippines starting this year.","Government digitalization efforts expanded, including wider rollout of the national ID (PhilSys) system."], communication_device:"Smartphones with Facebook Messenger, Viber, and increasingly Telegram/WhatsApp remained the everyday way Filipinos communicated.", trend:"AI chatbot novelty (ChatGPT), K-pop/K-drama fandom culture, and Gen Z slang like 'gyatt' and 'sigma' spread online." },
-    "2024": { politics:["The Marcos–Duterte political alliance publicly collapsed, with Vice President Sara Duterte resigning her cabinet post in June 2024 amid escalating feuds.","West Philippine Sea confrontations intensified, including a serious June 2024 clash at Ayungin Shoal that damaged Philippine navy boats and injured personnel.","Impeachment complaints were filed against Vice President Sara Duterte late in the year over alleged threats and misuse of confidential funds."], showbiz:["Pinoy teleseryes and reality shows increasingly premiered day-and-date on Netflix, expanding global reach for Philippine content.","GMA Network and TV5 competed strongly for former ABS-CBN talent and noontime-show viewership.","Filipino movies had a strong Metro Manila Film Festival showing, with several entries becoming major box-office hits."], technology:["AI adoption accelerated across Philippine businesses and government services, including chatbot-based public services.","Digital banking and e-wallets (GCash, Maya) became the default way most urban Filipinos managed money."], communication_device:"Smartphones with Facebook Messenger and Viber remained standard, with more Filipinos also chatting via WhatsApp and Telegram.", trend:"The Marcos–Duterte political split became a constant meme and discussion trend online, alongside K-pop/Gen Z internet slang." },
-    "2025": { politics:["Former President Rodrigo Duterte was arrested in March 2025 on an International Criminal Court warrant over drug-war killings and flown to The Hague, a historic first for a Philippine leader.","A massive flood-control infrastructure corruption scandal erupted, exposing billions of pesos in 'ghost' projects and triggering some of the largest anti-corruption protests in years.","In the May 2025 midterm elections Duterte-allied Senate candidates performed strongly, while Sara Duterte's House impeachment was voided by the Supreme Court in July for violating the one-year rule."], showbiz:["Philippine teleseryes and films continued charting on Netflix's Top 10 Philippines list throughout the year.","Philippine cinema had a strong year with several acclaimed festival entries and box-office hits.","OPM and Filipino artists continued gaining international streaming traction alongside major concert tours."], technology:["AI tools became mainstream in Philippine workplaces and schools, with government agencies expanding AI-powered digital services under the eGovPH platform.","Digital and mobile banking usage continued to grow as more Filipinos went cashless for everyday transactions."], communication_device:"Smartphones with Facebook Messenger remained the dominant everyday chat app, alongside heavy use of TikTok and Viber for messaging.", trend:"Filipino slang and viral group-chat words spread rapidly via TikTok, while the flood-control scandal drove massive online outrage and protest memes." },
-    "2026": { politics:["The flood-control corruption scandal's fallout continued into 2026, with ongoing investigations, resignations, and public accountability demands dominating national discourse.","The Philippines held barangay and Sangguniang Kabataan elections in 2026, the country's most local level of grassroots politics.","Continued West Philippine Sea tensions with China remained a major foreign-policy and security concern for the Marcos administration."], showbiz:["Philippine teleseryes, films, and OPM artists continued to top Netflix Philippines and streaming charts into the year.","Miss World Philippines 2026 and other major pageants kept the Philippines' strong beauty-pageant culture in the spotlight.","Noontime and variety shows like It's Showtime and Eat Bulaga! continued as TV mainstays amid growing competition from streaming."], technology:["AI adoption became a major national business and government focus, with initiatives like 'JuanUp 2026' promoting AI and digitalization across industries.","The Philippines continued expanding AI-powered government services (eGovPH) and smart-surveillance technology adoption."], communication_device:"Smartphones with Facebook Messenger, TikTok, and AI-integrated chat apps are the everyday way ordinary Filipinos communicate.", trend:"AI chatbot and AI-generated content novelty, alongside fast-evolving Gen Z/Gen Alpha slang, define early-2026 online culture." }
+    "1900s": { politics:["The Philippine-American War (1899–1902) followed Spain's cession of the Philippines to the US, ending the short-lived First Philippine Republic.","The American colonial government built a nationwide public school system with English as the medium of instruction.","The 1935 Constitution created the Commonwealth of the Philippines, with Manuel L. Quezon as its first president, on a 10-year path to full independence."], showbiz:["Sarswela (musical stage plays) and vaudeville-style bodabil shows were the dominant popular entertainment.","Silent films reached Manila in the early 1900s, with local film production beginning by the 1910s.","Kundiman took shape as a formal song genre, blending Spanish and American musical influences."], technology:["Railways and the first paved roads expanded under American colonial infrastructure programs.","Electricity and telephone lines reached parts of Manila for the first time.","Public education and English-language print media expanded literacy nationwide."], communication_device:"Telegrams and postal mail were the main means of long-distance communication — telephones existed only in wealthy Manila households and offices.", trend:"American fashion and English-language schooling reshaped urban Filipino youth culture.", music:"Kundiman ballads and American jazz records, played on early gramophones, defined popular music.", slang:"Bilingual Spanish–English–Tagalog code-switching became common among Manila's educated classes.", anachronism:["Address American officials and the mestizo elite with deference — colonial-era class lines are rigid, and speaking only provincial Tagalog marks you as unschooled in the new English-medium system.","A barong tagalog or suit is expected for any formal occasion; going bareheaded and coatless to a public function will draw stares."], fuel:{ note:"Automobiles were a rare luxury import in this era — retail gasoline pricing wasn't yet part of ordinary Filipino life, and no reliable pump-price records survive from this period.", source:null }, fx:{ note:"The peso was pegged at ₱2 to the US dollar under the 1903 Coinage Act's gold-standard peg — a rate that held for decades.", source:{ title:"Philippine peso", url:"https://en.wikipedia.org/wiki/Philippine_peso" } }, wikipedia:{ title:"Philippine–American War", url:"https://en.wikipedia.org/wiki/Philippine%E2%80%93American_War" }, suggestion:["Catch a sarswela or bodabil vaudeville show downtown — it's the biggest ticket in town before the movies take over.","Enroll in one of the new public schools — free English-medium education is the biggest change the Americans brought."] },
+    "1940s": { politics:["The Philippines suffered brutal Japanese occupation from 1942–1945, including the Bataan Death March and the devastating 1945 Battle of Manila.","The Philippines gained full independence from the United States on July 4, 1946, with Manuel Roxas as the first president of the Third Republic.","Post-war reconstruction began under presidents Roxas and Elpidio Quirino amid Huk rebellion unrest in Central Luzon."], showbiz:["Sampaguita Pictures and LVN Pictures dominated a booming post-war Filipino movie studio era.","Kundiman (traditional Filipino love ballads) and balladeers like Ruben Tagalog were hugely popular on radio.","Radio drama serials (radyo nobela) were the main mass entertainment format for Filipino families."], technology:["AM radio became the primary mass medium for news and entertainment across the archipelago.","War-surplus jeeps were converted into the first jeepneys, which became the iconic Philippine mode of transport."], communication_device:"Letters and telegrams — only wealthy households or offices had landline telephones.", trend:"Ternos and Americana-style suits mixed with wartime-influenced fashion as the country rebuilt after WWII.", music:"Kundiman ballads by Ruben Tagalog and wartime guerrilla songs defined the decade's soundtrack.", slang:"'Jusko' and Japanese-occupation loanwords entered everyday Tagalog slang.", anachronism:["Don't casually joke about the war years — wounds from the Japanese Occupation and the 1945 Battle of Manila are still fresh, and the topic calls for care, not small talk.","Ternos and Americana-style suits are the norm for anything formal; showing up underdressed to a public event will draw stares."], fuel:{ note:"Fuel was severely rationed under the Japanese Occupation (1942-45), and the postwar jeepneys — built from surplus U.S. Army jeeps — ran on whatever gasoline the reconstruction economy could supply. No reliable peso-per-liter retail figures survive from this period.", source:null }, fx:{ note:"The peso was fixed at ₱2 to the US dollar following independence in 1946.", source:{ title:"Philippine peso", url:"https://en.wikipedia.org/wiki/Philippine_peso" } }, wikipedia:{ title:"Japanese occupation of the Philippines", url:"https://en.wikipedia.org/wiki/Japanese_occupation_of_the_Philippines" }, suggestion:["Flag down one of the new jeepneys — converted war-surplus jeeps are becoming the fastest way around Manila.","Tune the radio to a kundiman ballad or wartime guerrilla song — it's what everyone's humming this year."] },
+    "1950s": { politics:["Ramon Magsaysay won the presidency in 1953 on a hugely popular anti-corruption, pro-farmer platform and suppressed the Huk rebellion.","Magsaysay died in a plane crash in Cebu in 1957, plunging the nation into mourning; Carlos P. Garcia succeeded him.","Garcia's 'Filipino First' policy promoted Filipino-owned businesses over foreign interests."], showbiz:["Filipino movie studios' golden age flourished, led by stars like Rogelio de la Rosa and Gloria Romero.","Rock and roll and American pop music began influencing Filipino youth via radio and jukeboxes.","Sampaguita and LVN Pictures released dozens of films a year, cementing a local star system."], technology:["Television arrived in the Philippines in 1953 with the launch of DZAQ-TV (later ABS-CBN), the first in Southeast Asia.","Household appliances like refrigerators and radios became more common in urban middle-class homes."], communication_device:"Landline telephones for the elite and businesses — most ordinary Filipinos still relied on letters and word of mouth.", trend:"Rock and roll dance crazes and American-style fashion caught on among Manila's youth.", music:"Rock and roll imports and homegrown kundiman crooners shared the airwaves as jukeboxes spread.", slang:"'Bakya' (unsophisticated, provincial taste) became a common showbiz put-down.", anachronism:["Don't badmouth President Magsaysay in public — his anti-corruption, pro-farmer popularity runs deep, and criticizing him openly reads as out of touch.","At a dance or jukebox gathering, rock-and-roll steps are the craze — sticking to older ballroom moves marks you as behind the times."], fuel:{ note:"Gasoline remained a modest, government-watched import item through the decade — no digitized retail pump-price archive from this period could be verified.", source:null }, fx:{ note:"The peso held at its ₱2-to-the-dollar peg for the entire decade, until defending it became unsustainable in 1962.", source:{ title:"Philippine peso", url:"https://en.wikipedia.org/wiki/Philippine_peso" } }, wikipedia:{ title:"Ramon Magsaysay", url:"https://en.wikipedia.org/wiki/Ramon_Magsaysay" }, suggestion:["Gather around the new TV set for DZAQ-TV's evening broadcast — Southeast Asia's first television station just went on air.","Catch a rock-and-roll dance at a jukebox joint — it's the youth craze sweeping Manila."] },
+    "1960s": { politics:["Diosdado Macapagal became president in 1961 and moved Independence Day observance to June 12 to honor the 1898 declaration.","Ferdinand Marcos was elected president in 1965, promising infrastructure and progress.","Marcos won re-election in 1969 amid growing student activism and the First Quarter Storm protest movement."], showbiz:["Nora Aunor and Vilma Santos rose to fame as teen singing and acting idols, becoming lifelong rival superstars.","Pilita Corrales became known as the 'Asia's Queen of Songs' with regional hit records.","Local rock bands and pop combos flourished alongside the Beatles-driven 'Beatlemania' craze."], technology:["Television ownership expanded rapidly in Manila and nearby provinces through the decade.","Transistor radios became widely affordable, bringing music and news to remote barrios."], communication_device:"Transistor radios for news and landline phones in the cities — barrio residents still relied on letters and personal messengers.", trend:"Beatlemania, mini-skirts, and rock-and-roll dance crazes swept Filipino youth culture.", music:"Beatlemania and Filipino pop combos dominated, while Nora Aunor and Vilma Santos topped the singing charts.", slang:"'Bagets' (young, adolescent) entered youth slang alongside Beatles-inspired fashion talk.", anachronism:["Mention the Beatles and you'll fit right in — Beatlemania and mini-skirts define youth style, and dismissing the 'Fab Four' reads as square.","After 1962, refer to June 12 as Independence Day rather than the old July 4 date — Macapagal's switch is recent enough that getting it wrong stands out."], fuel:{ note:"No reliable retail pump-price archive from this decade could be verified — but this is the decade the old currency peg finally gave way (see the exchange rate below), which pushed up the cost of every imported barrel of oil.", source:null }, fx:{ note:"The old ₱2 peg gave way in 1962 to a free-market rate near ₱3.90, then a further devaluation pushed it to ₱6.43 by 1970.", source:{ title:"Philippine peso", url:"https://en.wikipedia.org/wiki/Philippine_peso" } }, wikipedia:{ title:"First Quarter Storm", url:"https://en.wikipedia.org/wiki/First_Quarter_Storm" }, suggestion:["Pick up the latest Beatles single at a record shop — Beatlemania has completely taken over Manila's youth culture.","Watch the Independence Day fireworks on June 12 instead of July 4 — President Macapagal just moved the date."] },
+    "1970s": { politics:["President Marcos declared Martial Law on September 21–23, 1972, suspending civil liberties and beginning over a decade of authoritarian rule.","A new 1973 Constitution let Marcos stay in power indefinitely, and press freedom was curtailed with media outlets shut down.","Marcos nominally ended Martial Law in 1981 but retained emergency powers; opposition figure Ninoy Aquino Jr. was imprisoned for years."], showbiz:["Bomba (soft-core) films and action movies flourished even under censorship, alongside the rise of the Manila Film Festival.","Nora Aunor and Vilma Santos remained top box-office draws; the Manila Sound genre (Hotdog, VST & Company) defined 70s OPM.","Eat Bulaga! (1979) launched as a pioneering noontime variety show alongside the long-running Student Canteen."], technology:["Color television broadcasting began reaching Filipino households in the mid-1970s.","Direct-dial domestic long-distance telephone service expanded between major Philippine cities."], communication_device:"Landline telephones (party lines common) in cities and telegrams for urgent long-distance messages — many rural areas still relied on letters.", trend:"The 'Manila Sound' disco and bell-bottom fashion defined youth style, alongside platform shoes and psychedelic prints.", music:"The 'Manila Sound' of Hotdog and VST & Company defined Original Pilipino Music (OPM) as a genre.", slang:"'Jeproks' (rebellious youth) and disco-era slang spread through Manila Sound song lyrics.", anachronism:["Watch what you say about the government in public after September 1972 — Martial Law brings press censorship and curfews, and loose talk about Marcos or 'subversives' can get you noticed by the wrong people.","Bell-bottoms, platform shoes, and disco-inflected 'Manila Sound' are the look and sound of the decade — anything too conservative will feel dated."], fuel:{ note:"The 1973 and 1979 oil shocks hit hard — global crude jumped roughly 300% in 1973-74 alone, pushing the Philippines' oil import bill from about $200 million to $700 million and forcing fuel-rationing coupons and government-organized car-pooling schemes. Exact peso-per-liter retail figures from the period aren't reliably archived.", source:{ title:"Things to know: Philippines' oil crises during the Ferdinand Marcos years, 1973, 1979", url:"https://www.rappler.com/newsbreak/iq/things-to-know-philippines-oil-crises-ferdinand-marcos-years-1973-1979/" } }, fx:{ note:"The peso floated under a 'managed float' after 1970, generally trading in the ₱6-8 range for most of the decade.", source:{ title:"Philippine peso", url:"https://en.wikipedia.org/wiki/Philippine_peso" } }, wikipedia:{ title:"Martial law under Ferdinand Marcos", url:"https://en.wikipedia.org/wiki/Martial_law_under_Ferdinand_Marcos" }, suggestion:["Queue early for your fuel-rationing coupon — cars can only gas up on their assigned day during the oil crisis.","Dance to a Hotdog or VST & Company track at a Manila Sound disco — it's the freshest homegrown sound of the decade."] },
+    "1980s": { politics:["Ninoy Aquino was assassinated at Manila International Airport on August 21, 1983, galvanizing the anti-Marcos opposition.","The People Power (EDSA) Revolution in February 1986 peacefully toppled the 20-year Marcos dictatorship and installed Corazon Aquino as president.","President Aquino survived several coup attempts and promulgated a new 1987 Constitution restoring democratic institutions."], showbiz:["Sharon Cuneta became the 'Megastar' with a string of blockbuster teen romance films.","The noontime show wars intensified between Eat Bulaga! and It's Showtime predecessors.","OPM flourished with icons like Freddie Aguilar ('Anak') and the Apo Hiking Society."], technology:["Betamax and VHS home video players became common, spreading pirated and licensed movies to households.","Cable television and the first computer stores began appearing in Metro Manila."], communication_device:"Landline telephones were the household standard, alongside public payphones and the first pagers/beepers for professionals late in the decade.", trend:"Big hair, shoulder pads, and 'jeprox/jologs' slang emerged, along with breakdancing and New Wave fashion.", music:"Freddie Aguilar's 'Anak' became a global OPM breakthrough hit, alongside Sharon Cuneta's teen-romance soundtracks.", slang:"'Jeprox' and 'jologs'-style class-coded slang emerged in Manila youth culture.", anachronism:["After August 1983, don't dismiss talk of Ninoy Aquino's assassination as unimportant — it's the single most charged topic in the country, and opinions run deep on all sides.","Big hair, shoulder pads, and 'jeprox' slang define youth style post-EDSA — dressing too plainly will make you stand out."], fuel:{ note:"No reliable retail pump-price archive from this decade could be verified — but the peso's collapse alongside the debt crisis (see the exchange rate below) made every imported barrel dramatically more expensive in local terms.", source:null }, fx:{ note:"The peso collapsed alongside the debt crisis — from about ₱11.25 in 1983 to ₱18 in 1984 and ₱21 by 1986, the year Marcos fell.", source:{ title:"Philippine peso", url:"https://en.wikipedia.org/wiki/Philippine_peso" } }, wikipedia:{ title:"People Power Revolution", url:"https://en.wikipedia.org/wiki/People_Power_Revolution" }, suggestion:["Follow the crowds heading to EDSA after Marcos flees, but keep your distance if things look tense — the radio will carry it live either way.","Watch a Sharon Cuneta 'Megastar' teen romance at the movies — it's the box-office formula of the decade."] },
+    "1990s": { politics:["Fidel V. Ramos became president in 1992, ushering in economic reforms and 'Philippines 2000' growth ambitions.","Joseph 'Erap' Estrada, a popular former action star, won a landslide presidential victory in 1998.","The Mount Pinatubo eruption in 1991 was one of the largest volcanic eruptions of the 20th century, and the US bases at Clark and Subic closed in 1991–92."], showbiz:["The FPJ-led action film era continued while Regine Velasquez and the 'OPM divas' dominated the charts.","ABS-CBN's Ang TV and later teleseryes/game shows reshaped local TV after the network's 1992 post-EDSA revival.","Boy bands, girl groups, and karaoke culture boomed nationwide."], technology:["Mobile (cellular) phones and pagers/beepers became status symbols for professionals in the early-to-mid 90s.","The Philippines got its first public internet access in 1994, and Filipinos became avid early adopters of SMS texting by the late 1990s."], communication_device:"Pagers and beepers in the early 90s, giving way rapidly to cellular phones with SMS texting by the late 1990s.", trend:"SMS/texting culture exploded as a national pastime, alongside karaoke (videoke) nights and 'jeje/jologs' slang.", music:"Regine Velasquez and the OPM 'divas' ruled the charts alongside boy-band and girl-group pop.", slang:"SMS 'txt speak' abbreviations (like 'lQ', 'gud pm') became a defining generational slang.", anachronism:["Get comfortable with text-speak abbreviations — by the late 90s, texting is a full national obsession, and refusing to text will make you look ancient.","A pager or beeper (early 90s), later a cellphone, is a status symbol — showing up without one to a professional gathering invites questions."], fuel:{ note:"The Oil Deregulation Law (RA 8479) opened the downstream petroleum sector to competition in 1998, ending decades of government-set pump prices.", source:{ title:"Fuel Prices Philippines", url:"https://energypedia.info/wiki/Fuel_Prices_Philippines" } }, fx:{ note:"The peso depreciated to around ₱29 early in the decade, recovered to the ₱23-26 range mid-decade, then collapsed from ₱26 (July 1997) to ₱45 (1998) during the Asian Financial Crisis.", source:{ title:"Philippine peso", url:"https://en.wikipedia.org/wiki/Philippine_peso" } }, wikipedia:{ title:"1997 Asian financial crisis", url:"https://en.wikipedia.org/wiki/1997_Asian_financial_crisis" }, suggestion:["Send a text message instead of calling — SMS is fast becoming the cheapest, coolest way to reach anyone.","Watch Fidel Ramos's 'Philippines 2000' ads on TV and judge for yourself if the growth talk is living up to the hype."] },
+    "2000s": { politics:["The Second EDSA Revolution (EDSA II) in January 2001 ousted President Estrada over corruption, installing Gloria Macapagal-Arroyo.","Arroyo won a contested 2004 election and survived numerous coup attempts and the 'Hello Garci' election-rigging scandal in 2005.","The 2009 Maguindanao Massacre, one of the deadliest attacks on journalists in history, shocked the nation."], showbiz:["Teleseryes like Marimar and Pangako Sa 'Yo became massive national hits; Kris Aquino ruled daytime TV.","Reality/talent shows Pinoy Big Brother (2005) and Philippine Idol captivated audiences.","ASAP and Wowowee-style noontime shows drew huge live studio crowds and controversy."], technology:["SMS texting became ubiquitous and even fueled political mobilization (the EDSA II 'text brigades').","Internet cafes proliferated nationwide, and Friendster became the first massively popular social network among Filipinos."], communication_device:"Cellular phones with SMS texting were the dominant everyday communication method for most Filipinos.", trend:"Text messaging slang ('txt speak'), Friendster profile culture, and the 'Wowowee' noontime show craze defined the era.", music:"Teleserye theme songs and reality-show discoveries from Pinoy Big Brother dominated OPM playlists.", slang:"'Chz' (cheesy), 'jeje' spelling, and Friendster-profile slang defined online-era teen speak.", anachronism:["Keep a Friendster profile with a curated 'Top Friends' list — skipping social media entirely is a conversation-stopper among anyone under 30.","Follow along with the noontime 'Wowowee' craze and the current teleserye — not knowing the day's plot twist is an easy way to be left out of office chatter."], fuel:{ note:"Global oil's wild 2008 swing hit Philippine pumps directly — gasoline spiked to about ₱60 per liter in July 2008, then crashed back to roughly ₱31 per liter by December as the global financial crisis hit demand.", source:{ title:"Behavior of Retail Gasoline Prices in the Philippines to Changes in the World Price of Crude Oil", url:"https://pmr.upd.edu.ph/index.php/pmr/article/download/303/302/" } }, fx:{ note:"The peso stayed weak, generally in the ₱50s, for most of the decade after the Asian crisis, before strengthening as the decade closed.", source:{ title:"Philippine peso", url:"https://en.wikipedia.org/wiki/Philippine_peso" } }, wikipedia:{ title:"Second EDSA Revolution", url:"https://en.wikipedia.org/wiki/Second_EDSA_Revolution" }, suggestion:["Set up a Friendster account and curate your Top 8 — skipping it means missing the biggest social scene online.","Grab a text-a-friend promo and coordinate a Wowowee viewing party for the noontime show everyone's talking about."] },
+    "2010s": { politics:["Benigno 'Noynoy' Aquino III was elected president in 2010 on an anti-corruption 'Daang Matuwid' platform.","Rodrigo Duterte won the presidency in 2016 and launched a controversial and deadly 'war on drugs' campaign.","Typhoon Yolanda (Haiyan) devastated the Visayas in 2013, becoming one of the deadliest typhoons in Philippine history."], showbiz:["Teleseryes like Ang Probinsyano and romance films dominated ratings and box office.","K-pop and Korean dramas surged in popularity alongside homegrown love teams like KathNiel and JaDine.","Vice Ganda became one of the country's biggest comedy stars, hosting It's Showtime."], technology:["Smartphones became mainstream and affordable, and Facebook became the dominant social platform ('Facebook capital of the world').","4G/LTE mobile internet rollout and the rise of ride-hailing apps like Grab transformed daily life."], communication_device:"Smartphones using Facebook Messenger and mobile data became the everyday way Filipinos communicated, alongside continued SMS use.", trend:"Viral Facebook memes, K-pop fandom culture, and dance-craze videos defined youth pop culture.", music:"K-pop fandoms surged alongside homegrown 'love team' stars, while OPM found new life on Spotify and YouTube.", slang:"'Petmalu', 'werpa', and 'lodi' (backwards slang) went viral via social media.", anachronism:["Carry a smartphone and stay active on Facebook — it's the default way Filipinos socialize and get news, and being unreachable online invites concern.","K-pop and 'love team' fandoms run deep — mocking them openly, especially around younger crowds, won't go over well."], fuel:{ note:"The government rolled back diesel prices in mid-2011, selling from the strategic reserve about ₱2-3 below the market rate to cushion commuters, while pump prices otherwise swung with global crude through the decade.", source:{ title:"Fuel Prices Philippines", url:"https://energypedia.info/wiki/Fuel_Prices_Philippines" } }, fx:{ note:"The peso traded roughly between ₱40 and ₱54 through the decade.", source:{ title:"Philippine peso", url:"https://en.wikipedia.org/wiki/Philippine_peso" } }, wikipedia:{ title:"Typhoon Haiyan", url:"https://en.wikipedia.org/wiki/Typhoon_Haiyan" }, suggestion:["Download Grab for your first ride-hailed trip — it's rewriting how Manila gets around.","Join in on a viral dance-craze video with the family — it's the easiest way to feel plugged into the K-pop/meme era."] },
+    "2020": { politics:["President Duterte declared a nationwide COVID-19 lockdown starting mid-March 2020, among the world's longest and strictest.","Congress denied ABS-CBN's broadcast franchise renewal in July 2020, forcing the shutdown of the country's largest network.","The Anti-Terrorism Act of 2020 was signed into law, sparking major human-rights concerns and protests."], showbiz:["ABS-CBN's shutdown forced its stars and shows onto digital/cable platforms and rival network GMA.","Online concerts and livestream shows became the norm as venues closed due to the pandemic.","Teleseryes and noontime shows adapted to 'bubble' production setups with strict health protocols."], technology:["Video conferencing (Zoom, Google Meet) and online learning platforms became essential overnight.","E-commerce and food delivery apps (Lazada, Shopee, GrabFood) saw explosive growth as Filipinos stayed home."], communication_device:"Smartphones with Facebook Messenger, plus new heavy reliance on Zoom and Google Meet for video calls during lockdown.", trend:"Pandemic-era trends like Dalgona coffee, banana bread baking, and viral TikTok dance challenges took over.", music:"Online concerts and livestreamed OPM releases replaced canceled live shows during lockdown.", slang:"'Bes', 'sana all', and pandemic-era phrases like 'bawal umuwi' spread through social media.", anachronism:["Wear a face mask and carry a quarantine pass when going out — enhanced community quarantine rules are strictly enforced, and being caught without either can mean being turned back or fined.","Learn to navigate a Zoom or Google Meet call — practically everything from work meetings to family gatherings has moved online overnight."], fuel:{ note:"Global oil demand collapsed under pandemic lockdowns — crude briefly traded at negative prices in April 2020 — and Philippine pump prices fell to some of their lowest levels in years before rebounding as restrictions eased.", source:{ title:"Oil price drop during pandemic a win for Philippines – NEDA chief", url:"https://www.rappler.com/business/258654-oil-price-drop-during-coronavirus-win-philippines-neda/" } }, fx:{ note:"The peso held relatively steady, generally in the high-₱40s to low-₱50s, as capital flowed toward safer assets during the pandemic.", source:{ title:"Philippine peso", url:"https://en.wikipedia.org/wiki/Philippine_peso" } }, wikipedia:{ title:"COVID-19 pandemic in the Philippines", url:"https://en.wikipedia.org/wiki/COVID-19_pandemic_in_the_Philippines" }, suggestion:["Learn to bake banana bread or whip up Dalgona coffee — it's what everyone stuck at home is doing.","Set up a Zoom account — it's suddenly how work, school, and family gatherings all happen."] },
+    "2021": { politics:["The Philippines rolled out its national COVID-19 vaccination program starting March 2021 amid supply shortages and public hesitancy.","The country continued cycling through quarantine levels as new COVID variants like Delta emerged.","Political maneuvering intensified ahead of the 2022 elections, with Duterte's PDP-Laban party fracturing over succession plans."], showbiz:["Streaming platforms Netflix and Disney+ grew rapidly in Philippine adoption as local content moved online.","It's Showtime and Eat Bulaga! continued as top-rated noontime shows despite pandemic-limited audiences.","Filipino online content creators and vloggers surged in popularity as YouTube and TikTok became mainstream entertainment."], technology:["Digital payment apps like GCash and Maya saw massive adoption growth as Filipinos shifted to cashless transactions.","5G mobile network rollout began in select Metro Manila areas by major telcos Globe and Smart."], communication_device:"Smartphones with Facebook Messenger and GCash for both chatting and payments became central to daily life.", trend:"TikTok dance trends, viral challenges, and OPM revival songs like 'Pantropiko' dominated social feeds.", music:"OPM revival hits like 'Pantropiko' went viral on TikTok alongside vaccine-rollout public messaging jingles.", slang:"TikTok-driven slang and dance-challenge captions spread rapidly among Filipino youth.", anachronism:["Have your vaccination card ready — many establishments require proof of at least one dose for entry as the rollout expands.","GCash is fast becoming the default way to pay and split bills — insisting on cash-only slows down even simple transactions."], fuel:{ note:"Pump prices climbed back through the year as global demand recovered from the pandemic collapse, with Filipino motorists facing repeated hikes — a specific verified peso-per-liter figure for the full year wasn't found in the sources checked.", source:null }, fx:{ note:"The peso continued to hold in the high-₱40s to low-₱50s range for most of the year.", source:{ title:"Philippine peso", url:"https://en.wikipedia.org/wiki/Philippine_peso" } }, wikipedia:{ title:"COVID-19 vaccination in the Philippines", url:"https://en.wikipedia.org/wiki/COVID-19_vaccination_in_the_Philippines" }, suggestion:["Book your vaccine slot through the local LGU portal as soon as your age group opens up.","Try paying with GCash instead of cash — it's fast becoming the default for splitting a bill."] },
+    "2022": { politics:["Ferdinand 'Bongbong' Marcos Jr. won a landslide victory in the May 2022 presidential election, with Sara Duterte as vice president.","The Philippines lifted most COVID-19 restrictions and reopened its economy and international borders through the year.","President Marcos Jr. pursued closer ties with the US while continuing to navigate tensions with China in the West Philippine Sea."], showbiz:["Streaming and social media further disrupted traditional TV as GMA Network and digital-first Kapamilya Online Live competed for viewers post-ABS-CBN shutdown.","OPM saw a resurgence of city pop and 'sad songs' viral hits on Spotify and TikTok among Gen Z listeners.","Philippine cinema rebounded with hits in the Metro Manila Film Festival as theaters reopened."], technology:["5G network coverage expanded significantly across major Philippine cities.","Electric vehicles and e-trikes began gaining traction as the government pushed green transport initiatives."], communication_device:"Smartphones with Facebook Messenger remained dominant, with growing use of GCash and Viber for chats and payments.", trend:"TikTok-driven OPM revival, 'rizz'-style Gen Z slang, and viral election-season memes defined the year.", music:"City pop-influenced OPM and viral 'sad songs' found a new Gen Z audience on TikTok and Spotify.", slang:"'Rizz' and other global Gen Z slang blended with local Taglish online.", anachronism:["Brace for constant chatter about the May elections and the Marcos–Duterte tandem — steering clear of the topic entirely will feel conspicuous in most gatherings.","Face masks are still common outdoors even as restrictions ease — going without one in crowded indoor spaces may draw stares."], fuel:{ note:"Russia's invasion of Ukraine sent pump prices climbing repeatedly — by early March alone, year-to-date hikes had added about ₱8.75/liter to gasoline and ₱10.85/liter to diesel, on the way to a dozen separate hikes motorists faced over the year.", source:{ title:"Putin's war on Ukraine and impact on PH prices", url:"https://newsinfo.inquirer.net/1562204/putins-war-on-ukraine-and-impact-on-ph-prices" } }, fx:{ note:"The peso weakened toward nearly ₱59 to the dollar this year — one of its worst levels in years — as the US Federal Reserve raised interest rates.", source:{ title:"PH fuel prices 'most expensive' yet, as peso almost 60:$1", url:"https://newsinfo.inquirer.net/2196718/ph-fuel-prices-most-expensive-yet-as-peso-almost-601" } }, wikipedia:{ title:"2022 Philippine presidential election", url:"https://en.wikipedia.org/wiki/2022_Philippine_presidential_election" }, suggestion:["Compare notes with officemates on today's fuel-price hike — it's a near-weekly ritual this year.","Follow the presidential campaign rallies on TikTok — that's where this election is actually being fought."] },
+    "2023": { politics:["Tensions escalated in the West Philippine Sea, with repeated Chinese coast guard water-cannon and laser incidents against Philippine vessels near Ayungin Shoal.","President Marcos Jr. strengthened Philippines–US military cooperation, adding new EDCA sites for US troop access.","The political alliance between the Marcos and Duterte camps began visibly fraying over drug-war probes and policy differences."], showbiz:["Filipino films and teleseryes continued streaming-platform expansion via Netflix, iWantTFC, and GMA's streaming service.","Sarah Geronimo, Regine Velasquez, and other veteran singers held blockbuster reunion concerts as live events fully returned post-pandemic.","Local remakes and Korean drama-inspired teleseryes remained hugely popular."], technology:["AI tools like ChatGPT gained widespread public and business use in the Philippines starting this year.","Government digitalization efforts expanded, including wider rollout of the national ID (PhilSys) system."], communication_device:"Smartphones with Facebook Messenger, Viber, and increasingly Telegram/WhatsApp remained the everyday way Filipinos communicated.", trend:"AI chatbot novelty (ChatGPT), K-pop/K-drama fandom culture, and Gen Z slang like 'gyatt' and 'sigma' spread online.", music:"Veteran OPM singers held major reunion concerts as live shows fully returned post-pandemic.", slang:"'Gyatt' and 'sigma' spread through Filipino Gen Z social media alongside AI-chatbot novelty jokes.", anachronism:["Expect casual mentions of ChatGPT and AI tools in ordinary conversation — professing total unfamiliarity with them marks you as out of the loop.","'Gyatt' and 'sigma' are the Gen Z slang of the moment — using outdated slang around teenagers will get you gently mocked."], fuel:{ note:"Pump prices stayed elevated but far less volatile than 2022's whiplash, generally tracking global crude through the year — a specific verified peso-per-liter figure for the full year wasn't found in the sources checked.", source:null }, fx:{ note:"The peso eased back within the broad ₱40-54 range the currency had held through most of the 2010s-2020s, ahead of the sharper declines of 2026.", source:{ title:"Philippine peso", url:"https://en.wikipedia.org/wiki/Philippine_peso" } }, wikipedia:{ title:"Territorial disputes in the South China Sea", url:"https://en.wikipedia.org/wiki/Territorial_disputes_in_the_South_China_Sea" }, suggestion:["Ask ChatGPT to help draft something at work — it's suddenly everywhere in Philippine offices this year.","Catch a veteran OPM reunion concert — live shows are finally back in full swing post-pandemic."] },
+    "2024": { politics:["The Marcos–Duterte political alliance publicly collapsed, with Vice President Sara Duterte resigning her cabinet post in June 2024 amid escalating feuds.","West Philippine Sea confrontations intensified, including a serious June 2024 clash at Ayungin Shoal that damaged Philippine navy boats and injured personnel.","Impeachment complaints were filed against Vice President Sara Duterte late in the year over alleged threats and misuse of confidential funds."], showbiz:["Pinoy teleseryes and reality shows increasingly premiered day-and-date on Netflix, expanding global reach for Philippine content.","GMA Network and TV5 competed strongly for former ABS-CBN talent and noontime-show viewership.","Filipino movies had a strong Metro Manila Film Festival showing, with several entries becoming major box-office hits."], technology:["AI adoption accelerated across Philippine businesses and government services, including chatbot-based public services.","Digital banking and e-wallets (GCash, Maya) became the default way most urban Filipinos managed money."], communication_device:"Smartphones with Facebook Messenger and Viber remained standard, with more Filipinos also chatting via WhatsApp and Telegram.", trend:"The Marcos–Duterte political split became a constant meme and discussion trend online, alongside K-pop/Gen Z internet slang.", music:"Filipino teleseryes and OPM artists expanded their reach through day-and-date Netflix releases.", slang:"The Marcos–Duterte political split became constant meme material across Filipino social media.", anachronism:["The Marcos–Duterte political split is the constant background topic of the year — having zero opinion or awareness of it will seem strange in casual talk.","Streaming a teleserye on Netflix instead of catching it live on TV is now completely normal — don't assume everyone still watches appointment television."], fuel:{ note:"Pump prices continued to track global crude without a single dominant shock this year — a specific verified peso-per-liter figure for the full year wasn't found in the sources checked.", source:null }, fx:{ note:"The peso held in roughly the same broad range it had for several years, still short of the sharper declines the 2026 energy crisis would bring.", source:{ title:"Philippine peso", url:"https://en.wikipedia.org/wiki/Philippine_peso" } }, wikipedia:{ title:"Sara Duterte", url:"https://en.wikipedia.org/wiki/Sara_Duterte" }, suggestion:["Stream this week's teleserye episode on Netflix instead of waiting for it on TV — that's the normal way to watch now.","Ask around what people make of the Marcos-Duterte split — it's the one topic nobody's neutral on."] },
+    "2025": { politics:["Former President Rodrigo Duterte was arrested in March 2025 on an International Criminal Court warrant over drug-war killings and flown to The Hague, a historic first for a Philippine leader.","A massive flood-control infrastructure corruption scandal erupted, exposing billions of pesos in 'ghost' projects and triggering some of the largest anti-corruption protests in years.","In the May 2025 midterm elections Duterte-allied Senate candidates performed strongly, while Sara Duterte's House impeachment was voided by the Supreme Court in July for violating the one-year rule."], showbiz:["Philippine teleseryes and films continued charting on Netflix's Top 10 Philippines list throughout the year.","Philippine cinema had a strong year with several acclaimed festival entries and box-office hits.","OPM and Filipino artists continued gaining international streaming traction alongside major concert tours."], technology:["AI tools became mainstream in Philippine workplaces and schools, with government agencies expanding AI-powered digital services under the eGovPH platform.","Digital and mobile banking usage continued to grow as more Filipinos went cashless for everyday transactions."], communication_device:"Smartphones with Facebook Messenger remained the dominant everyday chat app, alongside heavy use of TikTok and Viber for messaging.", trend:"Filipino slang and viral group-chat words spread rapidly via TikTok, while the flood-control scandal drove massive online outrage and protest memes.", music:"OPM and Filipino artists continued gaining international streaming traction alongside major concert tours.", slang:"Viral group-chat slang spread fast via TikTok alongside protest-chant phrases tied to the flood-control scandal.", anachronism:["The flood-control corruption scandal and Duterte's ICC arrest dominate every conversation — avoiding the topic entirely will seem evasive.","TikTok is the default way news and memes spread — not having seen the viral clip everyone's talking about will leave you out of the loop."], fuel:{ note:"Pump prices held without a single dominant global shock this year, ahead of the crisis that would hit in early 2026 — a specific verified peso-per-liter figure for the full year wasn't found in the sources checked.", source:null }, fx:{ note:"The peso stayed within its recent broad range, not yet at the historic lows the 2026 energy crisis would push it toward.", source:{ title:"Philippine peso", url:"https://en.wikipedia.org/wiki/Philippine_peso" } }, wikipedia:{ title:"Arrest of Rodrigo Duterte", url:"https://en.wikipedia.org/wiki/Arrest_of_Rodrigo_Duterte" }, suggestion:["Follow the flood-control corruption hearings — it's the story dominating every news feed.","Watch the TikTok clips everyone's talking about before they're old news by tomorrow."] },
+    "2026": { politics:["A Middle East war closed the Strait of Hormuz in early 2026, disrupting about a fifth of the world's oil supply; President Marcos declared a national energy emergency on March 24 via Executive Order No. 110 as the Philippines, which imports 98% of its oil, faced fuel shortages and rolling brownouts.","The flood-control corruption scandal's fallout continued into 2026, with ongoing investigations, resignations, and public accountability demands dominating national discourse.","The Philippines held barangay and Sangguniang Kabataan elections in 2026, the country's most local level of grassroots politics.","Continued West Philippine Sea tensions with China remained a major foreign-policy and security concern for the Marcos administration."], showbiz:["Philippine teleseryes, films, and OPM artists continued to top Netflix Philippines and streaming charts into the year.","Miss World Philippines 2026 and other major pageants kept the Philippines' strong beauty-pageant culture in the spotlight.","Noontime and variety shows like It's Showtime and Eat Bulaga! continued as TV mainstays amid growing competition from streaming."], technology:["AI adoption became a major national business and government focus, with initiatives like 'JuanUp 2026' promoting AI and digitalization across industries.","The Philippines continued expanding AI-powered government services (eGovPH) and smart-surveillance technology adoption."], communication_device:"Smartphones with Facebook Messenger, TikTok, and AI-integrated chat apps are the everyday way ordinary Filipinos communicate.", trend:"AI chatbot and AI-generated content novelty, alongside fast-evolving Gen Z/Gen Alpha slang, define early-2026 online culture.", music:"Streaming charts kept favoring OPM and teleserye soundtrack singles into the year.", slang:"Fast-evolving Gen Z/Gen Alpha slang and AI-generated meme captions define early-2026 online talk.", anachronism:["AI-assisted tools and chatbots are woven into everyday work and school life under initiatives like 'JuanUp' — resisting them outright reads as behind the times.","Fast-evolving Gen Z/Gen Alpha slang shifts by the month — don't expect last year's viral words to still land."], fuel:{ note:"A Middle East war closed shipping through the Strait of Hormuz in early 2026, disrupting roughly a fifth of the world's oil supply. By March 24-25, diesel topped ₱130/liter and gasoline passed ₱100/liter at the pump — some stations saw diesel above ₱140/liter — before easing back to about ₱75.91/liter (gasoline) and ₱90.34/liter (diesel) by September.", source:{ title:"Marcos declares national energy emergency", url:"https://newsinfo.inquirer.net/2200774/marcos-declares-natl-energy-emergency" } }, fx:{ note:"The peso weakened to some of its lowest levels ever, around ₱60-61 to the dollar, as the energy crisis strained the economy.", source:{ title:"Philippine peso", url:"https://en.wikipedia.org/wiki/Philippine_peso" } }, wikipedia:{ title:"2026 Philippine energy crisis", url:"https://en.wikipedia.org/wiki/2026_Philippine_energy_crisis" }, suggestion:["Sign up for the four-day work week your office adopted to save on commuting fuel — it's the crisis-era norm now.","Check the DOE price board before fueling up — rates are moving fast enough that yesterday's price won't hold."] }
   };
 
   var ERA_LABELS = {
-    "1940s":"POST-WAR REBUILD", "1950s":"TV DAWN", "1960s":"BEATLEMANIA YEARS", "1970s":"MARTIAL LAW ERA",
+    "1900s":"AMERICAN COLONIAL ERA", "1940s":"POST-WAR REBUILD", "1950s":"TV DAWN", "1960s":"BEATLEMANIA YEARS", "1970s":"MARTIAL LAW ERA",
     "1980s":"PEOPLE POWER", "1990s":"TEXT MESSAGING BOOM", "2000s":"FRIENDSTER ERA", "2010s":"SMARTPHONE AGE",
     "2020":"LOCKDOWN YEAR", "2021":"VACCINE ROLLOUT", "2022":"MARCOS JR. ERA BEGINS", "2023":"AI ARRIVES",
     "2024":"POLITICAL FALLOUT", "2025":"DUTERTE AT THE HAGUE", "2026":"PRESENT DAY"
   };
+
+  var WEAK_SIGNAL_BUCKETS = { "1900s":true };
 
   var GREETINGS = [
     "Yo. Systems synced — good to see you back topside.",
@@ -411,13 +797,187 @@
     "Welcome back, chief. The archive's fully loaded."
   ];
 
+  var ACHIEVEMENTS = [
+    { id:"first_contact", label:"FIRST CONTACT", desc:"Complete your first temporal jump.", check:function(s){ return s.totalJumps >= 1; } },
+    { id:"decade_hopper", label:"DECADE HOPPER", desc:"Visit 3 different eras.", check:function(s){ return s.visited.length >= 3; } },
+    { id:"archive_complete", label:"ARCHIVE COMPLETE", desc:"Visit every era available to you.", check:function(s){ return s.availableBuckets.length > 0 && s.availableBuckets.every(function(b){ return s.visited.indexOf(b) >= 0; }); } },
+    { id:"deep_signal", label:"DEEP SIGNAL", desc:"Reach the fragmentary 1900s archive.", check:function(s){ return s.visited.indexOf("1900s") >= 0; } },
+    { id:"chronicler", label:"CHRONICLER", desc:"Log 5 field notes in your logbook.", check:function(s){ return s.journalCount >= 5; } },
+    { id:"analyst", label:"ANALYST", desc:"Score a perfect diagnostic quiz.", check:function(s){ return s.quizzesPerfect >= 1; } },
+    { id:"night_shift", label:"NIGHT SHIFT", desc:"Engage a jump in the dead of night.", check:function(s){ return s.nightJumps >= 1; } },
+    { id:"loop_closed", label:"LOOP CLOSED", desc:"Return to the present 5 times.", check:function(s){ return s.returns >= 5; } },
+    { id:"branch_walker", label:"BRANCH WALKER", desc:"Run the butterfly effect simulator.", check:function(s){ return s.butterflySims >= 1; } },
+    { id:"curator", label:"CURATOR", desc:"Open the landmark photo gallery.", check:function(s){ return s.galleryOpened >= 1; } },
+    { id:"front_page", label:"FRONT PAGE", desc:"Land your jump on a real breaking-news date.", check:function(s){ return s.exactHeadlineHits >= 1; } }
+  ];
+
+  // INQUIRER.net (the website) launched October 1997 — gates whether a "read the source" link can exist at all.
+  var INQUIRER_LAUNCH_MS = Date.UTC(1997, 9, 1);
+
+  // Real, verified one-time historical events (exact calendar date match only).
+  var HISTORICAL_DATES = [
+    { y:1946, m:7, d:4, tag:"POLITICS", headline:"PHILIPPINES DECLARES INDEPENDENCE FROM THE U.S.", detail:"Manuel Roxas becomes the first president of the Third Republic." },
+    { y:1957, m:3, d:17, tag:"POLITICS", headline:"PRESIDENT MAGSAYSAY KILLED IN PLANE CRASH", detail:"Ramon Magsaysay dies near Cebu along with 24 others, plunging the nation into mourning." },
+    { y:1972, m:9, d:21, tag:"POLITICS", headline:"MARCOS DECLARES MARTIAL LAW", detail:"Proclamation No. 1081 suspends civil liberties, beginning over a decade of authoritarian rule." },
+    { y:1983, m:8, d:21, tag:"BREAKING", headline:"NINOY AQUINO ASSASSINATED AT MANILA AIRPORT", detail:"The opposition senator is shot dead on the tarmac, galvanizing the anti-Marcos movement." },
+    { y:1986, m:2, d:25, tag:"BREAKING", headline:"MARCOS FLEES; PEOPLE POWER TOPPLES THE DICTATORSHIP", detail:"Corazon Aquino is installed as president after four days of peaceful revolution on EDSA." },
+    { y:1991, m:6, d:15, tag:"DISASTER", headline:"MOUNT PINATUBO ERUPTS IN THE CENTURY'S SECOND-LARGEST BLAST", detail:"Ashfall blankets Central Luzon; the eruption cools global temperatures for months." },
+    { y:2001, m:1, d:20, tag:"POLITICS", headline:"ESTRADA OUSTED IN EDSA II; ARROYO SWORN IN", detail:"Days of protest end with a new president taking the oath before the Supreme Court's chief justice.", inquirer:{ title:"Edsa Dos @20", byline:"Randy David, Philippine Daily Inquirer", date:"Jan. 17, 2021 (retrospective)", url:"https://opinion.inquirer.net/137055/edsa-dos-20" } },
+    { y:2009, m:11, d:23, tag:"BREAKING", headline:"58 KILLED IN THE MAGUINDANAO MASSACRE", detail:"One of the deadliest attacks on journalists in history shocks the nation.", inquirer:{ title:"Timeline: Maguindanao massacre", byline:"Philippine Daily Inquirer", date:"Nov. 22, 2012 (retrospective)", url:"https://newsinfo.inquirer.net/311355/timeline-maguindanao-massacre" } },
+    { y:2013, m:11, d:8, tag:"DISASTER", headline:"SUPER TYPHOON YOLANDA MAKES LANDFALL", detail:"One of the strongest tropical cyclones ever recorded devastates the Visayas.", inquirer:{ title:"'Yolanda' leaves over 100 dead in Tacloban City", byline:"Frances Mangosing", date:"Nov. 9, 2013", url:"https://newsinfo.inquirer.net/523931/over-100-dead-in-typhoon-yolanda-onslaught-in-philippines" } },
+    { y:2016, m:6, d:30, tag:"POLITICS", headline:"RODRIGO DUTERTE INAUGURATED AS PRESIDENT", detail:"The tough-talking former Davao mayor takes office on a law-and-order platform.", inquirer:{ title:"Duterte takes oath as PH's 16th President", byline:"Nestor Corrales", date:"June 30, 2016", url:"https://newsinfo.inquirer.net/793306/duterte-takes-oath-as-phs-16th-president" } },
+    { y:2020, m:3, d:16, tag:"BREAKING", headline:"LUZON GOES ON LOCKDOWN AS COVID-19 SPREADS", detail:"Enhanced community quarantine shuts the island down amid the pandemic.", inquirer:{ title:"Luzon now under 'enhanced community quarantine' – Palace", byline:"Krissy Aguilar", date:"March 16, 2020", url:"https://newsinfo.inquirer.net/1243036/luzon-island-now-under-enhanced-community-quarantine-palace" } },
+    { y:2022, m:6, d:30, tag:"POLITICS", headline:"BONGBONG MARCOS INAUGURATED AS PRESIDENT", detail:"Ferdinand Marcos Jr. takes office after a landslide election win, with Sara Duterte as vice president.", inquirer:{ title:"Bongbong Marcos retakes Palace today", byline:"Nestor Corrales", date:"June 30, 2022", url:"https://newsinfo.inquirer.net/1619262/bongbong-marcos-left-palace-angry-he-retakes-it-today" } },
+    { y:2025, m:3, d:11, tag:"BREAKING", headline:"DUTERTE ARRESTED ON ICC WARRANT, FLOWN TO THE HAGUE", detail:"A historic first for a Philippine former leader, over drug-war killings.", inquirer:{ title:"Ex-President Rodrigo Duterte now at Villamor Airbase", byline:"John Eric Mendoza", date:"March 11, 2025", url:"https://newsinfo.inquirer.net/2042778/ex-president-rodrigo-duterte-now-at-villamor-airbase" } },
+    { y:2026, m:3, d:24, tag:"BREAKING", headline:"MARCOS DECLARES NATIONAL ENERGY EMERGENCY", detail:"Executive Order No. 110 responds to a Middle East war closing the Strait of Hormuz, as diesel tops ₱130/liter and gasoline passes ₱100/liter at the pump.", inquirer:{ title:"Marcos declares national energy emergency", byline:"Luisa Cabato", date:"March 25, 2026", url:"https://newsinfo.inquirer.net/2200774/marcos-declares-natl-energy-emergency" } }
+  ];
+
+  // Real, fixed-date annual Philippine observances (month/day match, any year), each with a real INQUIRER.net explainer.
+  var RECURRING_OBSERVANCES = [
+    { m:1, d:1, headline:"NEW YEAR'S DAY", detail:"Fireworks, noise, and round fruit — Filipinos welcome the new year with a bang.", inquirer:{ title:"Round fruits, prayers, and sticky sweets for New Year", byline:"Cebu Daily News / Inquirer.net", date:"evergreen explainer", url:"https://cebudailynews.inquirer.net/49069/round-fruits-prayers-and-sticky-sweets-for-new-year" } },
+    { m:4, d:9, headline:"ARAW NG KAGITINGAN (DAY OF VALOR)", detail:"The nation honors the fall of Bataan and the WWII Death March.", inquirer:{ title:"Araw ng Kagitingan: A tribute to heroism, resilience, and sacrifice", byline:"Inquirer.net", date:"evergreen explainer", url:"https://newsinfo.inquirer.net/2208024/araw-ng-kagitingan-a-tribute-to-heroism-resilience-and-sacrifice" } },
+    { m:6, d:12, headline:"INDEPENDENCE DAY", detail:"Marking the 1898 declaration of Philippine independence from Spain.", inquirer:{ title:"Explainer: Why Philippine Independence Day is celebrated June 12", byline:"Cebu Daily News / Inquirer.net", date:"evergreen explainer", url:"https://cebudailynews.inquirer.net/736523/explainer-why-philippine-independence-day-is-celebrated-june-12" } },
+    { m:8, d:21, headline:"NINOY AQUINO DAY", detail:"A national holiday remembering the assassinated opposition leader.", inquirer:{ title:"Why August 21 is a holiday in the Philippines", byline:"Cebu Daily News / Inquirer.net", date:"evergreen explainer", url:"https://cebudailynews.inquirer.net/759239/why-august-21-is-a-holiday-in-the-philippines" } },
+    { m:11, d:1, headline:"ALL SAINTS' DAY", detail:"Families flock to cemeteries nationwide to honor the dead.", inquirer:{ title:"Kalag-kalag: All Saints' Day, All Souls' Day — why we celebrate this season", byline:"Cebu Daily News / Inquirer.net", date:"evergreen explainer", url:"https://cebudailynews.inquirer.net/537168/kalag-kalag-all-saints-day-all-souls-day-why-we-celebrate-this-season" } },
+    { m:11, d:30, headline:"BONIFACIO DAY", detail:"Honoring Andres Bonifacio, founder of the Katipunan revolutionary movement.", inquirer:{ title:"Bonifacio: A short life dedicated to the Filipino", byline:"Inquirer.net Opinion", date:"evergreen explainer", url:"https://opinion.inquirer.net/159095/bonifacio-a-short-life-dedicated-to-the-filipino" } },
+    { m:12, d:25, headline:"CHRISTMAS DAY", detail:"The climax of the world's longest Christmas season, which famously starts in September.", inquirer:{ title:"Why Pinoy Christmas begins in September", byline:"Inquirer.net Opinion", date:"evergreen explainer", url:"https://opinion.inquirer.net/188411/why-pinoy-christmas-begins-in-september" } },
+    { m:12, d:30, headline:"RIZAL DAY", detail:"Marking the 1896 execution of national hero Jose Rizal.", inquirer:{ title:"Dec. 30, 1896: Dr. Jose Rizal executed in Bagumbayan", byline:"USA Inquirer.net", date:"evergreen explainer", url:"https://usa.inquirer.net/186502/dec-30-1896-dr-jose-rizal-executed-in-bagumbayan" } }
+  ];
+
+  // Real, credited photographs from Wikimedia Commons (public domain / Creative Commons).
+  // These are hotlinked, not bundled — the device needs a live connection to load them.
+  var YOUTUBE_ERA_SET = { "2010s":true, "2020":true, "2021":true, "2022":true, "2023":true, "2024":true, "2025":true, "2026":true };
+
+  var LANDMARKS = [
+    {
+      id: "intramuros",
+      name: "Intramuros (the Walled City), Manila",
+      blurb: "Manila's 16th-century walled district — reduced to ruins in the 1945 Battle of Manila, and rebuilt since as a heritage district.",
+      photos: [
+        {
+          era: "1940s", year: 1945, label: "1945",
+          caption: "Destruction at the Walled City of old Manila in May 1945, after the Battle of Manila.",
+          credit: "U.S. Army Medical Dept., \"Surgery in World War II\" (1964) — public domain, U.S. federal government work",
+          src: "https://commons.wikimedia.org/wiki/Special:FilePath/Manila%20Walled%20City%20Destruction%20May%201945.jpg",
+          sourceUrl: "https://commons.wikimedia.org/wiki/File:Manila_Walled_City_Destruction_May_1945.jpg"
+        },
+        {
+          era: "2010s", year: 2015, label: "2015",
+          caption: "Intramuros today, restored as Manila's historic walled district.",
+          credit: "Photo by Ray in Manila, CC BY 2.0, via Wikimedia Commons",
+          src: "https://commons.wikimedia.org/wiki/Special:FilePath/Intramuros%2C%20Manila%2C%20Philippines.jpg",
+          sourceUrl: "https://commons.wikimedia.org/wiki/File:Intramuros,_Manila,_Philippines.jpg"
+        }
+      ],
+      video: { title: "Intramuros: A History of the Walled City of Manila", channel: "EternalVibe", url: "https://www.youtube.com/watch?v=tBio2r3dNAY" }
+    },
+    {
+      id: "manila-cathedral",
+      name: "Manila Cathedral, Intramuros",
+      blurb: "The seat of the Archdiocese of Manila has been destroyed and rebuilt multiple times — most dramatically after the 1945 bombing of the city.",
+      photos: [
+        {
+          era: "1940s", year: 1945, label: "BEFORE (1945)",
+          caption: "Manila Cathedral before the Japanese WWII bombing in 1945.",
+          credit: "Photo by Bob Meza (\"Fathers WWII Photos\"), public domain (CC0), via Wikimedia Commons",
+          src: "https://commons.wikimedia.org/wiki/Special:FilePath/Manila%20Cathedral%20before.jpg",
+          sourceUrl: "https://commons.wikimedia.org/wiki/File:Manila_Cathedral_before.jpg"
+        },
+        {
+          era: "1940s", year: 1945, label: "AFTER (1945)",
+          caption: "Manila Cathedral after the 1945 bombing.",
+          credit: "Photo by Mepurina, CC BY-SA 3.0, via Wikimedia Commons",
+          src: "https://commons.wikimedia.org/wiki/Special:FilePath/Manila%20Cathedral%20after.jpg",
+          sourceUrl: "https://commons.wikimedia.org/wiki/File:Manila_Cathedral_after.jpg"
+        },
+        {
+          era: "2010s", year: 2010, label: "TODAY",
+          caption: "The rebuilt Manila Cathedral facade.",
+          credit: "Photo by Bhoyetjumpay, public domain (Philippine freedom-of-panorama), via Wikimedia Commons",
+          src: "https://commons.wikimedia.org/wiki/Special:FilePath/Manila%20Cathedral%20Facade.jpg",
+          sourceUrl: "https://commons.wikimedia.org/wiki/File:Manila_Cathedral_Facade.jpg"
+        }
+      ],
+      video: { title: "The Manila Cathedral: A Journey Through History and Heritage", channel: "Ezekiel Jacosalem", url: "https://www.youtube.com/watch?v=9rrDu3UdlFw" }
+    }
+  ];
+
+  var BFLY_TEMPLATES = {
+    reverse: {
+      political: [
+        "In this branch, the political momentum behind the {era} moment collapses almost overnight, and rival factions fill the vacuum faster than they did historically.",
+        "Public institutions built on the real outcome never fully form, leaving the {era} political order noticeably more fragmented.",
+        "International observers scramble to recalibrate, and foreign policy toward the country shifts in the opposite direction from what actually happened."
+      ],
+      cultural: [
+        "Popular culture of the {era} turns the moment into a cautionary tale instead of a celebrated one.",
+        "The songs, shows, and slang that actually came to define the {era} never quite take hold in this branch.",
+        "Media retrospectives decades later frame this as the era that almost was, rather than the one that happened."
+      ],
+      personal: [
+        "Someone living through the {era} in this branch grows up more guarded about institutions than they did in reality.",
+        "A household's stories about the {era} carry a tone of relief or regret, depending on which side of the reversal they were on.",
+        "Daily habits — what people read, who they trust — shift subtly toward caution in this branch."
+      ],
+      societal: [
+        "The decade that follows the {era} looks noticeably more cautious and slower-moving in this branch.",
+        "Migration and job patterns tied to the real {era} outcome never fully materialize, reshaping the years that follow.",
+        "The balance of influence among the era's key players tips toward whoever benefited from the reversal."
+      ]
+    },
+    amplify: {
+      political: [
+        "In this branch, the political momentum behind the {era} moment hardens into consensus faster than it did historically.",
+        "Institutions built on the real outcome form earlier and stronger, and the {era} political order consolidates quickly.",
+        "International observers align with the outcome sooner, accelerating shifts in foreign policy that took longer in reality."
+      ],
+      cultural: [
+        "Popular culture of the {era} leans even harder into celebrating the moment, and it becomes shorthand for the whole decade sooner.",
+        "The songs, shows, and slang that defined the {era} spread faster and further in this branch.",
+        "Media retrospectives decades later treat this as the single defining moment of the {era}, more than it actually was."
+      ],
+      personal: [
+        "Someone living through the {era} in this branch grows up treating the outcome as simply how things are, without the doubts people actually had.",
+        "A household's stories about the {era} carry more pride and certainty than the more complicated real memories.",
+        "Daily habits shift faster toward whatever the outcome favored, since there's less resistance pushing back."
+      ],
+      societal: [
+        "The decade that follows the {era} moves faster and more decisively in this branch, for better or worse.",
+        "Migration and job patterns tied to the {era} outcome intensify sooner than they did in reality.",
+        "The balance of influence among the era's key players tilts further and faster toward whoever already had momentum."
+      ]
+    }
+  };
+
   var DAY_MS = 86400000;
   var SESSION_MS = 60 * 60 * 1000;
 
   var timerInterval = null;
   var sessionStart = null;
+  var currentDossier = null;
+  var quizState = null;
+  var currentButterfly = null;
+  var currentGalleryLandmark = null;
+  var toastTimer = null;
+
+  var ALL_SCREENS = ["screen-boot","screen-home","screen-transit","screen-dossier","screen-butterfly","screen-quiz","screen-gallery","screen-logbook","screen-archive","screen-timeout"];
+  var NAV_SCREENS = { "screen-home":true, "screen-gallery":true, "screen-logbook":true, "screen-archive":true };
 
   function $(id){ return document.getElementById(id); }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  }
+
+  function shuffle(arr){
+    for(var i = arr.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
 
   function localDateStr(d){
     return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
@@ -438,24 +998,250 @@
   }
 
   function showScreen(id){
-    ["screen-boot","screen-home","screen-transit","screen-dossier","screen-timeout"].forEach(function(s){
-      $(s).hidden = (s !== id);
+    ALL_SCREENS.forEach(function(s){ $(s).hidden = (s !== id); });
+    $("nav-bar").hidden = !NAV_SCREENS[id];
+    document.querySelectorAll(".nav-item").forEach(function(btn){
+      btn.classList.toggle("active", btn.getAttribute("data-screen") === id);
     });
+    var el = $(id);
+    if(el){
+      el.classList.remove("screen-anim");
+      void el.offsetWidth;
+      el.classList.add("screen-anim");
+    }
   }
 
   window.BBP_currentScreen = function(){
-    var ids = ["screen-boot","screen-home","screen-transit","screen-dossier","screen-timeout"];
-    for(var i=0;i<ids.length;i++){ if(!$(ids[i]).hidden) return ids[i]; }
+    for(var i=0;i<ALL_SCREENS.length;i++){ if(!$(ALL_SCREENS[i]).hidden) return ALL_SCREENS[i]; }
     return null;
   };
   window.BBP_showScreen = showScreen;
 
   /* ---------------- bucket lookup ---------------- */
   function getBucketKeyForYear(year){
-    if(year < 1940) return null;
+    if(year < 1900) return null;
+    if(year <= 1939) return "1900s";
     if(year <= 2019) return String(Math.floor(year/10)*10) + "s";
     if(year <= 2026) return String(year);
     return null;
+  }
+
+  function computeAvailableBuckets(birthYear, currentYear){
+    var keys = [];
+    if(birthYear <= 1939 && currentYear >= 1900) keys.push("1900s");
+    for(var d=1940; d<=2010; d+=10){
+      if(birthYear <= d+9 && currentYear >= d) keys.push(d+"s");
+    }
+    for(var y=2020; y<=2026; y++){
+      if(y >= birthYear && y <= currentYear) keys.push(String(y));
+    }
+    return keys;
+  }
+
+  /* ---------------- persistence helpers ---------------- */
+  function loadStats(){
+    var raw = localStorage.getItem("bbp_stats");
+    var s = raw ? JSON.parse(raw) : {};
+    return {
+      totalJumps: s.totalJumps || 0,
+      visited: s.visited || [],
+      quizzesTaken: s.quizzesTaken || 0,
+      quizzesPerfect: s.quizzesPerfect || 0,
+      nightJumps: s.nightJumps || 0,
+      returns: s.returns || 0,
+      butterflySims: s.butterflySims || 0,
+      galleryOpened: s.galleryOpened || 0,
+      exactHeadlineHits: s.exactHeadlineHits || 0
+    };
+  }
+  function saveStats(s){ localStorage.setItem("bbp_stats", JSON.stringify(s)); }
+
+  function loadJournal(){
+    var raw = localStorage.getItem("bbp_journal");
+    return raw ? JSON.parse(raw) : [];
+  }
+  function saveJournal(arr){ localStorage.setItem("bbp_journal", JSON.stringify(arr)); }
+
+  function loadUnlocked(){
+    var raw = localStorage.getItem("bbp_achievements");
+    return raw ? JSON.parse(raw) : [];
+  }
+
+  function checkAchievements(){
+    var s = loadStats();
+    var journal = loadJournal();
+    var birthStr = localStorage.getItem("bbp_birthdate");
+    if(!birthStr) return loadUnlocked();
+    var birthYear = new Date(parseDateInput(birthStr)).getUTCFullYear();
+    var currentYear = new Date(todayUTCMidnight()).getUTCFullYear();
+    var ctx = {
+      totalJumps: s.totalJumps,
+      visited: s.visited,
+      quizzesTaken: s.quizzesTaken,
+      quizzesPerfect: s.quizzesPerfect,
+      nightJumps: s.nightJumps,
+      returns: s.returns,
+      butterflySims: s.butterflySims,
+      galleryOpened: s.galleryOpened,
+      exactHeadlineHits: s.exactHeadlineHits,
+      journalCount: journal.length,
+      availableBuckets: computeAvailableBuckets(birthYear, currentYear)
+    };
+    var unlocked = loadUnlocked();
+    var newlyUnlocked = [];
+    ACHIEVEMENTS.forEach(function(a){
+      if(unlocked.indexOf(a.id) < 0 && a.check(ctx)){
+        unlocked.push(a.id);
+        newlyUnlocked.push(a);
+      }
+    });
+    if(newlyUnlocked.length){
+      localStorage.setItem("bbp_achievements", JSON.stringify(unlocked));
+      newlyUnlocked.forEach(showAchievementToast);
+    }
+    return unlocked;
+  }
+
+  function showAchievementToast(a){
+    $("achv-toast-name").textContent = a.label;
+    var toast = $("achievement-toast");
+    toast.hidden = false;
+    if(toastTimer) window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(function(){ toast.hidden = true; }, 3200);
+  }
+
+  function recordJump(year){
+    var bucketKey = getBucketKeyForYear(year);
+    var s = loadStats();
+    s.totalJumps += 1;
+    if(bucketKey && s.visited.indexOf(bucketKey) < 0) s.visited.push(bucketKey);
+    var hour = new Date().getHours();
+    if(hour < 5) s.nightJumps += 1;
+    saveStats(s);
+    checkAchievements();
+    return bucketKey;
+  }
+
+  function recordReturn(){
+    var s = loadStats();
+    s.returns += 1;
+    saveStats(s);
+    checkAchievements();
+  }
+
+  function recordExactHeadlineHit(){
+    var s = loadStats();
+    s.exactHeadlineHits += 1;
+    saveStats(s);
+    checkAchievements();
+  }
+
+  function findHistoricalDate(year, month, day){
+    return HISTORICAL_DATES.find(function(e){ return e.y === year && e.m === month && e.d === day; }) || null;
+  }
+  function findRecurringObservance(month, day){
+    return RECURRING_OBSERVANCES.find(function(e){ return e.m === month && e.d === day; }) || null;
+  }
+
+  function buildAmbientTicker(bucketKey){
+    var d = PH_HISTORY[bucketKey];
+    if(!d) return [];
+    var items = [
+      "TREND: " + d.trend,
+      "WIRE: " + pick(d.politics),
+      "SCREENS: " + pick(d.showbiz),
+      "TECH: " + pick(d.technology)
+    ];
+    if(d.music) items.push("ON THE CHARTS: " + d.music);
+    if(d.slang) items.push("SLANG WATCH: " + d.slang);
+    return shuffle(items);
+  }
+
+  function renderInquirerSource(entry, year, month, day){
+    var el = $("headline-inquirer");
+    var jumpMs = Date.UTC(year, month - 1, day);
+    if(jumpMs < INQUIRER_LAUNCH_MS){
+      el.className = "headline-source error-log";
+      el.textContent = "ERR_0x61 :: INQUIRER_NET_NOT_FOUND\nNo web archive available for this date.\nReason: INQUIRER.net did not launch until October 1997.\nSignal cannot be retrieved for this timestamp.";
+      return;
+    }
+    if(entry && entry.inquirer){
+      var inq = entry.inquirer;
+      el.className = "headline-source";
+      el.innerHTML = '<a href="' + inq.url + '" target="_blank" rel="noopener">READ ON INQUIRER.NET ▸</a>' +
+        '<span class="headline-source-meta">&ldquo;' + escapeHtml(inq.title) + '&rdquo; — ' + escapeHtml(inq.byline) + ', ' + escapeHtml(inq.date) + '</span>';
+    } else {
+      el.className = "headline-source error-log";
+      el.textContent = "ERR_0x61 :: INQUIRER_NET_NOT_FOUND\nNo matching archive entry indexed for this exact date.\nSignal cannot be retrieved for this timestamp.";
+    }
+  }
+
+  /* ---------------- morning briefing / the pulse / anachronist's warning ---------------- */
+  var SEASON_INFO = {
+    // General, real Philippine climate patterns by month — atmospheric texture, not a specific recorded forecast.
+    dry_cool: { months:[11,12,1,2], label:"AMIHAN SEASON — COOL & DRY", text:"The northeast amihan wind keeps mornings cool and the air unusually clear for the tropics." },
+    dry_hot: { months:[3,4,5], label:"TAG-INIT — HOT & DRY", text:"The dry season is in full force: blazing sun from sunrise, dust on the unpaved roads, everyone chasing shade by midmorning." },
+    wet: { months:[6,7,8,9,10], label:"HABAGAT SEASON — WET & STORMY", text:"The southwest habagat monsoon is active — expect sudden downpours, thick humidity, and the ever-present chance of a tropical cyclone building offshore." }
+  };
+  function seasonForMonth(month){
+    if(SEASON_INFO.dry_cool.months.indexOf(month) >= 0) return SEASON_INFO.dry_cool;
+    if(SEASON_INFO.dry_hot.months.indexOf(month) >= 0) return SEASON_INFO.dry_hot;
+    return SEASON_INFO.wet;
+  }
+
+  function lowerFirst(str){ return str ? str.charAt(0).toLowerCase() + str.slice(1) : str; }
+
+  function renderMorningBriefing(bucketKey, year, month, day){
+    var data = PH_HISTORY[bucketKey];
+    var panel = $("dossier-morning");
+    if(!data){ panel.hidden = true; return; }
+    var season = seasonForMonth(month);
+    var dateObj = new Date(Date.UTC(year, month - 1, day));
+    var dateLabel = fmtDate(dateObj);
+    var weekday = dateObj.toLocaleDateString("en-US", { weekday:"long", timeZone:"UTC" });
+    $("morning-headline").textContent = season.label;
+    $("morning-atmosphere").textContent = "It's " + weekday + ", " + dateLabel + ". You step outside, and " + lowerFirst(season.text);
+    $("morning-scene").textContent = "Around you: " + data.trend + " Word travels the way it does here — " + lowerFirst(data.communication_device);
+    $("morning-suggestion").textContent = "What you could do today: " + pick(data.suggestion || ["Just take it all in — this is your one shot at living this day."]);
+    panel.hidden = false;
+  }
+
+  function renderPulse(bucketKey){
+    var data = PH_HISTORY[bucketKey];
+    var panel = $("dossier-pulse");
+    if(!data){ panel.hidden = true; return; }
+    $("pulse-political").textContent = pick(data.politics);
+    $("pulse-cultural").textContent = pick(data.showbiz);
+    $("pulse-tech").textContent = pick(data.technology);
+    panel.hidden = false;
+  }
+
+  function renderAnachronism(bucketKey){
+    var data = PH_HISTORY[bucketKey];
+    var panel = $("dossier-anachronism");
+    if(!data || !data.anachronism || !data.anachronism.length){ panel.hidden = true; return; }
+    $("anachronism-text").textContent = pick(data.anachronism);
+    panel.hidden = false;
+  }
+
+  function renderEconSource(elId, entry){
+    var el = $(elId);
+    if(entry && entry.source){
+      el.innerHTML = '<a href="' + entry.source.url + '" target="_blank" rel="noopener">SOURCE: ' + escapeHtml(entry.source.title) + ' ▸</a>';
+    } else {
+      el.textContent = "No verified per-liter/rate figure found for this period in the sources checked — described qualitatively above.";
+    }
+  }
+
+  function renderEconomicSnapshot(bucketKey){
+    var data = PH_HISTORY[bucketKey];
+    var panel = $("dossier-economy");
+    if(!data || !data.fuel || !data.fx){ panel.hidden = true; return; }
+    $("economy-fuel-text").textContent = data.fuel.note;
+    renderEconSource("economy-fuel-source", data.fuel);
+    $("economy-fx-text").textContent = data.fx.note;
+    renderEconSource("economy-fx-source", data.fx);
+    panel.hidden = false;
   }
 
   /* ---------------- boot screen ---------------- */
@@ -534,8 +1320,12 @@
 
   function buildTimeline(birthYear, currentYear){
     var items = [];
-    if(birthYear < 1940){
-      items.push({ start:birthYear, end:Math.min(1939,currentYear), label:"UNCHARTED ERA", hasData:false, bucketKey:null, jumpYear:Math.min(1939,currentYear) });
+    if(birthYear < 1900){
+      items.push({ start:birthYear, end:Math.min(1899,currentYear), label:"UNCHARTED ERA", hasData:false, bucketKey:null, jumpYear:Math.min(1899,currentYear) });
+    }
+    var s1900 = Math.max(1900, birthYear), e1900 = Math.min(1939, currentYear);
+    if(s1900 <= e1900 && birthYear <= 1939 && currentYear >= 1900){
+      items.push({ start:s1900, end:e1900, label:ERA_LABELS["1900s"], hasData:true, bucketKey:"1900s", range:s1900+"–"+e1900, jumpYear:s1900, weak:true });
     }
     for(var d=1940; d<=2010; d+=10){
       var dEnd = d+9;
@@ -560,12 +1350,14 @@
     track.innerHTML = "";
     items.forEach(function(it, idx){
       var row = document.createElement(it.hasData ? "button" : "div");
-      row.className = "timeline-item" + (it.hasData ? " clickable" : " nodata") + (it.hasData && idx === items.length-1 && it.end >= currentYear ? " now" : "");
+      var isNow = it.hasData && idx === items.length-1 && it.end >= currentYear;
+      row.className = "timeline-item" + (it.hasData ? " clickable" : " nodata") + (isNow ? " now" : "") + (it.weak ? " weak" : "");
       var rangeLabel = it.range || (it.start === it.end ? String(it.start) : it.start + "–" + it.end);
+      var flag = it.hasData ? (isNow ? "YOU ARE HERE" : (it.weak ? "WEAK SIGNAL" : "JUMP")) : "NO SIGNAL";
       row.innerHTML =
         '<span class="t-range">' + rangeLabel + '</span>' +
         '<span class="t-era">' + it.label + '</span>' +
-        '<span class="t-flag">' + (it.hasData ? (it.hasData && idx === items.length-1 && it.end >= currentYear ? "YOU ARE HERE" : "JUMP") : "NO SIGNAL") + '</span>';
+        '<span class="t-flag">' + flag + '</span>';
       if(it.hasData){
         row.addEventListener("click", function(jy){
           return function(){
@@ -586,17 +1378,67 @@
   function engageJump(ms){
     showScreen("screen-transit");
     window.setTimeout(function(){
-      renderDossier(new Date(ms).getUTCFullYear());
+      var d = new Date(ms);
+      var year = d.getUTCFullYear(), month = d.getUTCMonth() + 1, day = d.getUTCDate();
+      recordJump(year);
+      renderDossier(year, month, day);
       showScreen("screen-dossier");
     }, 900);
   }
 
-  function renderDossier(year){
+  function renderDossier(year, month, day){
     var bucketKey = getBucketKeyForYear(year);
     var data = bucketKey ? PH_HISTORY[bucketKey] : null;
+    currentDossier = { year:year, bucketKey:bucketKey };
+
+    var headlinePanel = $("dossier-headline");
+    var tickerWrap = $("dossier-ticker");
+    if(data && month && day){
+      var exact = findHistoricalDate(year, month, day);
+      var recurring = !exact ? findRecurringObservance(month, day) : null;
+      var dateLabel = fmtDate(new Date(Date.UTC(year, month - 1, day)));
+      if(exact){
+        headlinePanel.hidden = false;
+        headlinePanel.classList.remove("observance");
+        $("headline-tag").textContent = "// breaking — " + dateLabel;
+        $("headline-text").textContent = exact.headline;
+        $("headline-detail").textContent = exact.detail;
+        renderInquirerSource(exact, year, month, day);
+        recordExactHeadlineHit();
+      } else if(recurring){
+        headlinePanel.hidden = false;
+        headlinePanel.classList.add("observance");
+        $("headline-tag").textContent = "// today in ph history — " + dateLabel;
+        $("headline-text").textContent = recurring.headline;
+        $("headline-detail").textContent = recurring.detail;
+        renderInquirerSource(recurring, year, month, day);
+      } else {
+        headlinePanel.hidden = true;
+      }
+
+      var tickerItems = buildAmbientTicker(bucketKey);
+      var tickerText = tickerItems.join("   •   ") + "   •   ";
+      $("ticker-content").textContent = tickerText;
+      $("ticker-track").style.animationDuration = Math.max(15, tickerText.length * 0.09) + "s";
+      tickerWrap.hidden = false;
+
+      renderMorningBriefing(bucketKey, year, month, day);
+      renderPulse(bucketKey);
+      renderAnachronism(bucketKey);
+      renderEconomicSnapshot(bucketKey);
+    } else {
+      headlinePanel.hidden = true;
+      tickerWrap.hidden = true;
+      $("dossier-morning").hidden = true;
+      $("dossier-pulse").hidden = true;
+      $("dossier-anachronism").hidden = true;
+      $("dossier-economy").hidden = true;
+    }
 
     $("dossier-year").textContent = year;
-    $("dossier-era-label").textContent = bucketKey && ERA_LABELS[bucketKey] ? ERA_LABELS[bucketKey] : (year < 1940 ? "NO SIGNAL" : "ARCHIVE PENDING");
+    var eraLabelEl = $("dossier-era-label");
+    eraLabelEl.textContent = bucketKey && ERA_LABELS[bucketKey] ? ERA_LABELS[bucketKey] + (WEAK_SIGNAL_BUCKETS[bucketKey] ? "  ·  SIGNAL: FRAGMENTARY" : "") : (year < 1900 ? "NO SIGNAL" : "ARCHIVE PENDING");
+    eraLabelEl.classList.toggle("weak-signal", !!WEAK_SIGNAL_BUCKETS[bucketKey]);
 
     var body = $("dossier-body");
     var errBox = $("dossier-error");
@@ -605,9 +1447,12 @@
       body.innerHTML = "";
       body.hidden = true;
       errBox.hidden = false;
-      $("dossier-error-text").textContent = year < 1940
-        ? "The Protocol's digitized archive only reaches back to 1940. " + year + " sits outside the network — whatever happened there never made it online."
+      $("dossier-error-text").textContent = year < 1900
+        ? "The Protocol's digitized archive only reaches back to 1900. " + year + " sits outside the network — whatever happened there never made it online."
         : "The archive hasn't been written yet for " + year + ". You've outrun the record.";
+      $("dossier-quiz-cta").hidden = true;
+      $("dossier-journal-cta").hidden = true;
+      $("dossier-butterfly-cta").hidden = true;
       return;
     }
 
@@ -623,7 +1468,296 @@
       '<div class="panel feature magenta"><p class="eyebrow">// street-level trend</p><p class="f-value">' + data.trend + '</p></div>' +
       '<div class="panel factpanel politics"><h3>POLITICS &amp; HISTORY</h3>' + list(data.politics) + '</div>' +
       '<div class="panel factpanel showbiz"><h3>SHOWBIZ &amp; CULTURE</h3>' + list(data.showbiz) + '</div>' +
-      '<div class="panel factpanel tech"><h3>TECHNOLOGY</h3>' + list(data.technology) + '</div>';
+      '<div class="panel factpanel tech"><h3>TECHNOLOGY</h3>' + list(data.technology) + '</div>' +
+      (data.music || data.slang ? '<div class="panel factpanel culture"><h3>MUSIC &amp; SLANG</h3>' + list([data.music ? "Music: " + data.music : null, data.slang ? "Slang: " + data.slang : null].filter(Boolean)) + '</div>' : '') +
+      (data.wikipedia ? '<div class="panel feature cyan" id="wikipedia-source"><p class="eyebrow">// verify the record</p><p class="f-value"><a href="' + data.wikipedia.url + '" target="_blank" rel="noopener">' + escapeHtml(data.wikipedia.title) + ' — Wikipedia ▸</a></p></div>' : '');
+
+    $("dossier-quiz-cta").hidden = false;
+    $("dossier-journal-cta").hidden = false;
+    $("dossier-butterfly-cta").hidden = false;
+    $("journal-input").value = "";
+    $("journal-saved-hint").hidden = true;
+  }
+
+  /* ---------------- butterfly effect simulator ---------------- */
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function fillEra(tpl, eraLabel){ return tpl.split("{era}").join(eraLabel); }
+
+  function startButterfly(bucketKey, year){
+    var data = PH_HISTORY[bucketKey];
+    if(!data) return;
+    currentButterfly = { bucketKey:bucketKey, year:year, anchor:data.politics[0] };
+    $("bfly-era-label").textContent = (ERA_LABELS[bucketKey] || bucketKey) + " · " + year;
+    $("bfly-anchor-text").textContent = data.politics[0];
+    $("bfly-tree").hidden = true;
+    $("bfly-tree").innerHTML = "";
+    $("bfly-btn-reverse").classList.remove("active");
+    $("bfly-btn-amplify").classList.remove("active");
+  }
+
+  function renderButterflyTree(direction){
+    if(!currentButterfly) return;
+    var eraLabel = ERA_LABELS[currentButterfly.bucketKey] || currentButterfly.bucketKey;
+    var t = BFLY_TEMPLATES[direction];
+    var branch = {
+      political: fillEra(pick(t.political), eraLabel),
+      cultural: fillEra(pick(t.cultural), eraLabel),
+      societal1: fillEra(pick(t.societal), eraLabel),
+      personal1: fillEra(pick(t.personal), eraLabel),
+      societal2: fillEra(pick(t.societal), eraLabel),
+      personal2: fillEra(pick(t.personal), eraLabel)
+    };
+
+    var html =
+      '<div class="bfly-node bfly-root"><div class="bfly-node-label"><span>ROOT · ' + (direction === "reverse" ? "REVERSED" : "AMPLIFIED") + '</span></div><div class="bfly-node-text">' + escapeHtml(currentButterfly.anchor) + '</div></div>' +
+      '<div class="bfly-node" data-branch="a"><div class="bfly-node-label"><span>POLITICAL RIPPLE</span><span class="bfly-caret">›</span></div><div class="bfly-node-text">' + branch.political + '</div>' +
+        '<div class="bfly-children collapsed">' +
+          '<div class="bfly-node bfly-leaf"><div class="bfly-node-label"><span>SOCIETAL ECHO</span></div><div class="bfly-node-text">' + branch.societal1 + '</div></div>' +
+          '<div class="bfly-node bfly-leaf"><div class="bfly-node-label"><span>PERSONAL ECHO</span></div><div class="bfly-node-text">' + branch.personal1 + '</div></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="bfly-node" data-branch="b"><div class="bfly-node-label"><span>CULTURAL RIPPLE</span><span class="bfly-caret">›</span></div><div class="bfly-node-text">' + branch.cultural + '</div>' +
+        '<div class="bfly-children collapsed">' +
+          '<div class="bfly-node bfly-leaf"><div class="bfly-node-label"><span>SOCIETAL ECHO</span></div><div class="bfly-node-text">' + branch.societal2 + '</div></div>' +
+          '<div class="bfly-node bfly-leaf"><div class="bfly-node-label"><span>PERSONAL ECHO</span></div><div class="bfly-node-text">' + branch.personal2 + '</div></div>' +
+        '</div>' +
+      '</div>';
+
+    var tree = $("bfly-tree");
+    tree.innerHTML = html;
+    tree.hidden = false;
+    tree.querySelectorAll(".bfly-node[data-branch]").forEach(function(node){
+      node.addEventListener("click", function(){
+        var children = node.querySelector(".bfly-children");
+        if(!children) return;
+        var collapsed = children.classList.toggle("collapsed");
+        node.classList.toggle("expanded", !collapsed);
+      });
+    });
+
+    var s = loadStats();
+    s.butterflySims += 1;
+    saveStats(s);
+    checkAchievements();
+  }
+
+  /* ---------------- diagnostic quiz ---------------- */
+  function collectFacts(bucketKey){
+    var d = PH_HISTORY[bucketKey];
+    if(!d) return [];
+    return [].concat(d.politics, d.showbiz, d.technology);
+  }
+
+  function buildQuiz(bucketKey){
+    var ownFacts = shuffle(collectFacts(bucketKey).slice());
+    var correctPool = ownFacts.slice(0, Math.min(3, ownFacts.length));
+
+    var distractorPool = [];
+    Object.keys(PH_HISTORY).forEach(function(k){
+      if(k === bucketKey) return;
+      collectFacts(k).forEach(function(t){ distractorPool.push(t); });
+    });
+    shuffle(distractorPool);
+
+    return correctPool.map(function(correctText, i){
+      var d1 = distractorPool[(i*2) % distractorPool.length];
+      var d2 = distractorPool[(i*2+1) % distractorPool.length];
+      var options = shuffle([correctText, d1, d2]);
+      return { correctText: correctText, options: options };
+    });
+  }
+
+  function startQuiz(bucketKey, year){
+    var questions = buildQuiz(bucketKey);
+    quizState = { bucketKey:bucketKey, year:year, questions:questions, index:0, score:0 };
+    $("quiz-era-label").textContent = (ERA_LABELS[bucketKey] || bucketKey) + " · " + year;
+    $("quiz-result").hidden = true;
+    $("quiz-options").hidden = false;
+    $("quiz-question-label").hidden = false;
+    $("quiz-progress").hidden = false;
+    renderQuizQuestion();
+  }
+
+  function renderQuizQuestion(){
+    var q = quizState.questions[quizState.index];
+    $("quiz-progress").textContent = "QUESTION " + (quizState.index+1) + " OF " + quizState.questions.length + " — SCORE " + quizState.score;
+    $("quiz-question-label").textContent = "Which of these actually happened in the " + (ERA_LABELS[quizState.bucketKey] || quizState.bucketKey) + " era?";
+    var box = $("quiz-options");
+    box.innerHTML = "";
+    q.options.forEach(function(opt){
+      var b = document.createElement("button");
+      b.className = "quiz-option panel";
+      b.textContent = opt;
+      b.addEventListener("click", function(){ answerQuiz(opt, b); });
+      box.appendChild(b);
+    });
+  }
+
+  function answerQuiz(selected, btnEl){
+    var q = quizState.questions[quizState.index];
+    var options = $("quiz-options").querySelectorAll(".quiz-option");
+    options.forEach(function(b){ b.disabled = true; });
+    var correct = (selected === q.correctText);
+    if(correct){
+      quizState.score += 1;
+      btnEl.classList.add("correct");
+    } else {
+      btnEl.classList.add("wrong");
+      options.forEach(function(b){ if(b.textContent === q.correctText) b.classList.add("correct"); });
+    }
+    window.setTimeout(function(){
+      quizState.index += 1;
+      if(quizState.index < quizState.questions.length){
+        renderQuizQuestion();
+      } else {
+        finishQuiz();
+      }
+    }, 1100);
+  }
+
+  function finishQuiz(){
+    $("quiz-options").hidden = true;
+    $("quiz-question-label").hidden = true;
+    $("quiz-progress").hidden = true;
+    var s = loadStats();
+    s.quizzesTaken += 1;
+    var perfect = quizState.score === quizState.questions.length;
+    if(perfect) s.quizzesPerfect += 1;
+    saveStats(s);
+    $("quiz-score-text").textContent = "SCORE: " + quizState.score + " / " + quizState.questions.length + (perfect ? "  ·  PERFECT RUN" : "");
+    $("quiz-result").hidden = false;
+    checkAchievements();
+  }
+
+  /* ---------------- logbook ---------------- */
+  function renderLogbook(){
+    var list = loadJournal();
+    var container = $("logbook-list");
+    var empty = $("logbook-empty");
+    if(!list.length){
+      container.innerHTML = "";
+      empty.hidden = false;
+      return;
+    }
+    empty.hidden = true;
+    var ordered = list.map(function(e, i){ return { e:e, i:i }; }).sort(function(a,b){ return b.e.ts - a.e.ts; });
+    container.innerHTML = ordered.map(function(o){
+      var e = o.e;
+      return '<div class="panel journal-entry">' +
+        '<div class="je-head"><span class="je-year">' + e.year + '</span><span class="je-era">' + escapeHtml(e.era || "") + '</span><button class="ghost-btn je-delete" data-idx="' + o.i + '">DELETE</button></div>' +
+        '<p class="je-text">' + escapeHtml(e.text) + '</p>' +
+        '<p class="je-ts">' + new Date(e.ts).toLocaleString() + '</p>' +
+        '</div>';
+    }).join("");
+    container.querySelectorAll(".je-delete").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var idx = Number(btn.getAttribute("data-idx"));
+        var arr = loadJournal();
+        arr.splice(idx, 1);
+        saveJournal(arr);
+        renderLogbook();
+      });
+    });
+  }
+
+  /* ---------------- archive / achievements ---------------- */
+  function statBlock(label, val){
+    return '<div class="stat"><span class="stat-label">' + label + '</span><span class="stat-value">' + val + '</span></div>';
+  }
+
+  function renderArchive(){
+    var s = loadStats();
+    var unlocked = loadUnlocked();
+    var birthStr = localStorage.getItem("bbp_birthdate");
+    var birthYear = new Date(parseDateInput(birthStr)).getUTCFullYear();
+    var currentYear = new Date(todayUTCMidnight()).getUTCFullYear();
+    var available = computeAvailableBuckets(birthYear, currentYear);
+    var journalCount = loadJournal().length;
+
+    $("archive-stats").innerHTML =
+      statBlock("JUMPS LOGGED", s.totalJumps) +
+      statBlock("ERAS VISITED", s.visited.length + " / " + available.length) +
+      statBlock("FIELD NOTES", journalCount) +
+      statBlock("DIAGNOSTICS RUN", s.quizzesTaken);
+
+    $("badge-grid").innerHTML = ACHIEVEMENTS.map(function(a){
+      var isUnlocked = unlocked.indexOf(a.id) >= 0;
+      return '<div class="panel badge ' + (isUnlocked ? "unlocked" : "locked") + '">' +
+        '<div class="badge-label">' + a.label + '</div>' +
+        '<div class="badge-desc">' + (isUnlocked ? escapeHtml(a.desc) : "??? — keep exploring.") + '</div>' +
+        '</div>';
+    }).join("");
+  }
+
+  /* ---------------- landmark photo gallery ---------------- */
+  function renderGalleryList(){
+    var list = $("gallery-list");
+    list.innerHTML = LANDMARKS.map(function(lm, i){
+      var thumb = lm.photos[0];
+      return '<div class="panel gallery-card" data-idx="' + i + '">' +
+        '<img class="gallery-card-thumb" src="' + thumb.src + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
+        '<div class="gallery-card-info"><h3>' + escapeHtml(lm.name) + '</h3><p>' + lm.photos.length + ' archived photos — tap to open</p></div>' +
+        '</div>';
+    }).join("");
+    list.querySelectorAll(".gallery-card").forEach(function(card){
+      card.addEventListener("click", function(){ openLandmark(Number(card.getAttribute("data-idx"))); });
+    });
+    $("gallery-detail").hidden = true;
+    list.hidden = false;
+  }
+
+  function openLandmark(idx){
+    currentGalleryLandmark = LANDMARKS[idx];
+    $("gallery-list").hidden = true;
+    $("gallery-detail").hidden = false;
+    $("gallery-detail-name").textContent = currentGalleryLandmark.name;
+    $("gallery-detail-blurb").textContent = currentGalleryLandmark.blurb;
+
+    var tabs = $("gallery-tabs");
+    tabs.innerHTML = currentGalleryLandmark.photos.map(function(p, i){
+      return '<button class="gallery-tab" data-idx="' + i + '">' + escapeHtml(p.label) + '</button>';
+    }).join("");
+    tabs.querySelectorAll(".gallery-tab").forEach(function(btn){
+      btn.addEventListener("click", function(){ renderGalleryPhoto(Number(btn.getAttribute("data-idx"))); });
+    });
+    renderGalleryPhoto(0);
+
+    var s = loadStats();
+    s.galleryOpened += 1;
+    saveStats(s);
+    checkAchievements();
+  }
+
+  function renderGalleryPhoto(idx){
+    var lm = currentGalleryLandmark;
+    var p = lm.photos[idx];
+    $("gallery-tabs").querySelectorAll(".gallery-tab").forEach(function(btn, i){
+      btn.classList.toggle("active", i === idx);
+    });
+
+    var img = $("gallery-photo-img");
+    var fallback = $("gallery-photo-fallback");
+    fallback.hidden = true;
+    img.hidden = false;
+    img.onerror = function(){ img.hidden = true; fallback.hidden = false; };
+    img.src = p.src;
+    img.alt = p.caption;
+
+    $("gallery-photo-caption").textContent = p.year + " — " + p.caption;
+    $("gallery-photo-credit").innerHTML = "Credit: " + escapeHtml(p.credit) + ' — <a href="' + p.sourceUrl + '" target="_blank" rel="noopener">source</a>';
+
+    var videoBlock = $("gallery-video-block");
+    if(YOUTUBE_ERA_SET[p.era]){
+      var v = lm.video;
+      videoBlock.innerHTML =
+        '<p class="eyebrow">// related footage</p>' +
+        '<p class="body-text">"' + escapeHtml(v.title) + '" — ' + escapeHtml(v.channel) + '</p>' +
+        '<a href="' + v.url + '" target="_blank" rel="noopener" class="ghost-btn">▸ WATCH ON YOUTUBE</a>';
+    } else {
+      videoBlock.innerHTML =
+        '<p class="eyebrow">// related footage</p>' +
+        '<div class="gallery-error-log">ERR_0x59 :: YOUTUBE_NOT_FOUND\nNo video archive available for ' + (ERA_LABELS[p.era] || p.era) + '.\nReason: the platform did not exist yet (YouTube launched February 2005).\nSignal cannot be retrieved for this timestamp.</div>';
+    }
   }
 
   /* ---------------- day counter ---------------- */
@@ -691,9 +1825,62 @@
     timerEl.classList.toggle("warn", totalSec < 300);
   }
 
+  /* ---------------- nav + dossier extras wiring ---------------- */
+  function initNav(){
+    document.querySelectorAll(".nav-item").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var target = btn.getAttribute("data-screen");
+        if(target === "screen-logbook") renderLogbook();
+        if(target === "screen-archive") renderArchive();
+        if(target === "screen-gallery") renderGalleryList();
+        showScreen(target);
+      });
+    });
+  }
+
+  function initDossierExtras(){
+    $("btn-run-quiz").addEventListener("click", function(){
+      if(!currentDossier || !currentDossier.bucketKey) return;
+      startQuiz(currentDossier.bucketKey, currentDossier.year);
+      showScreen("screen-quiz");
+    });
+    $("btn-quiz-done").addEventListener("click", function(){ showScreen("screen-dossier"); });
+
+    $("btn-save-journal").addEventListener("click", function(){
+      var text = $("journal-input").value.trim();
+      if(!text || !currentDossier) return;
+      var arr = loadJournal();
+      arr.push({ year: currentDossier.year, era: ERA_LABELS[currentDossier.bucketKey] || "", text: text, ts: Date.now() });
+      saveJournal(arr);
+      $("journal-input").value = "";
+      $("journal-saved-hint").hidden = false;
+      checkAchievements();
+    });
+
+    $("btn-run-butterfly").addEventListener("click", function(){
+      if(!currentDossier || !currentDossier.bucketKey) return;
+      startButterfly(currentDossier.bucketKey, currentDossier.year);
+      showScreen("screen-butterfly");
+    });
+    $("bfly-btn-reverse").addEventListener("click", function(){
+      $("bfly-btn-reverse").classList.add("active");
+      $("bfly-btn-amplify").classList.remove("active");
+      renderButterflyTree("reverse");
+    });
+    $("bfly-btn-amplify").addEventListener("click", function(){
+      $("bfly-btn-amplify").classList.add("active");
+      $("bfly-btn-reverse").classList.remove("active");
+      renderButterflyTree("amplify");
+    });
+    $("btn-bfly-back").addEventListener("click", function(){ showScreen("screen-dossier"); });
+
+    $("btn-gallery-back-list").addEventListener("click", function(){ renderGalleryList(); });
+  }
+
   /* ---------------- wiring ---------------- */
   $("btn-jump-again").addEventListener("click", function(){ showScreen("screen-home"); });
   $("btn-return-present").addEventListener("click", function(){
+    recordReturn();
     var slider = $("jump-slider");
     slider.value = slider.max;
     updateJumpReadout(Number(slider.max));
@@ -707,13 +1894,11 @@
 
   /* ---------------- boot sequence ---------------- */
   initBoot();
+  initNav();
+  initDossierExtras();
   var existingBirth = localStorage.getItem("bbp_birthdate");
   if(existingBirth){
-    showScreen("screen-home");
-    $("hud-stats").hidden = false;
-    initHome();
-    startDayCounter();
-    startSessionTimer();
+    bootDone();
   } else {
     showScreen("screen-boot");
   }
