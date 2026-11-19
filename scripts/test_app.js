@@ -137,7 +137,7 @@ async function run() {
   await new Promise((r) => setTimeout(r, 10));
   if ($("screen-archive").hidden) fail("archive screen should show via nav");
   const badges = doc.querySelectorAll("#badge-grid .badge");
-  if (badges.length !== 11) fail("expected 11 achievement badges, got " + badges.length);
+  if (badges.length !== 14) fail("expected 14 achievement badges, got " + badges.length);
   else ok("archive shows all " + badges.length + " badges");
   const unlockedBadges = doc.querySelectorAll("#badge-grid .badge.unlocked");
   if (unlockedBadges.length < 1) fail("expected at least 1 unlocked achievement (first_contact) by now");

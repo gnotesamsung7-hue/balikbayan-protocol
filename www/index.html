@@ -384,6 +384,31 @@
   .je-text{ color:var(--text); font-size:.87rem; line-height:1.55; white-space:pre-wrap; }
   .je-ts{ margin-top:10px; font-family:var(--font-mono); font-size:.6rem; color:var(--text-faint); }
 
+  /* ---------- memoir ---------- */
+  .memoir-stat-line{ margin-top:10px; font-family:var(--font-mono); font-size:.7rem; color:var(--amber); letter-spacing:.06em; }
+  .memoir-form::before{ background:var(--green); box-shadow:0 0 8px var(--green-glow); }
+  .memoir-line-input{ width:100%; margin-top:6px; margin-bottom:14px; }
+  .memoir-form textarea.journal-input{ margin-top:6px; }
+  .memoir-form .field-label{ margin-top:0; }
+  .memoir-list{ display:flex; flex-direction:column; gap:14px; margin-top:16px; }
+  .memoir-chapter::before{ background:var(--green); box-shadow:0 0 8px var(--green-glow); }
+  .mc-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+  .mc-chapter-no{ font-family:var(--font-mono); font-size:.64rem; letter-spacing:.1em; color:var(--text-faint); }
+  .mc-date{ font-family:var(--font-mono); color:var(--amber); font-size:.92rem; }
+  .mc-location{ font-family:var(--font-mono); font-size:.72rem; color:var(--text-dim); flex:1; }
+  .mc-delete{ margin-left:auto; }
+  .mc-title{ font-size:1.05rem; margin:2px 0 6px; color:var(--text); }
+  .mc-byline{ display:inline-block; font-family:var(--font-mono); font-size:.62rem; letter-spacing:.08em; padding:2px 8px; border-radius:2px; margin-bottom:8px; }
+  .mc-byline.self{ color:var(--cyan); border:1px solid var(--cyan); }
+  .mc-byline.other{ color:var(--violet); border:1px solid var(--violet); }
+  .mc-body{ color:var(--text-dim); font-size:.87rem; line-height:1.6; white-space:pre-wrap; }
+
+  .dossier-memoir::before{ background:var(--green); box-shadow:0 0 8px var(--green-glow); }
+  .dossier-memoir h2{ font-size:1.1rem; margin:4px 0 8px; color:var(--text); }
+
+  .timeline-item.chapter{ border-left-color:var(--green); }
+  .timeline-item.chapter .t-flag{ color:var(--green); }
+
   /* ---------- archive / achievements ---------- */
   .archive-stats{ display:flex; gap:26px; flex-wrap:wrap; }
   .archive-stats::before{ background:var(--violet); box-shadow:0 0 8px var(--violet-glow); }
@@ -461,6 +486,23 @@
   .achv-toast-label{ font-family:var(--font-mono); font-size:.6rem; letter-spacing:.14em; color:var(--violet); margin-bottom:4px; }
   .achv-toast-name{ font-family:var(--font-display); font-size:1.05rem; color:var(--text); }
 
+  /* ---------- tech support guide toast ---------- */
+  .tech-toast{
+    position:fixed; bottom:calc(76px + var(--safe-bottom)); left:50%; transform:translateX(-50%); z-index:60;
+    background:var(--bg-raised); border:1px solid var(--amber); padding:12px 16px; width:min(92vw, 380px);
+    clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+    box-shadow:0 0 26px var(--amber-glow);
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .tech-toast{ animation: toastIn .3s ease; }
+  }
+  .tech-toast-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .tech-toast-label{ font-family:var(--font-mono); font-size:.68rem; letter-spacing:.1em; color:var(--amber); }
+  .tech-toast-close{ background:none; border:none; color:var(--text-faint); font-size:.9rem; line-height:1; padding:2px 4px; }
+  .tech-toast-close:hover{ color:var(--amber); }
+  .tech-toast-body{ font-family:var(--font-body); font-size:.86rem; line-height:1.5; color:var(--text); }
+  .tech-support-btn{ margin-top:12px; }
+
   /* ---------- timeout ---------- */
   #screen-timeout{ align-items:center; padding-top:10vh; }
   .timeout-panel{ max-width:560px; text-align:center; }
@@ -493,6 +535,13 @@
 <div id="achievement-toast" class="achv-toast" hidden>
   <p class="achv-toast-label">// ACHIEVEMENT UNLOCKED</p>
   <p class="achv-toast-name" id="achv-toast-name"></p>
+</div>
+<div id="tech-support-toast" class="tech-toast" hidden>
+  <div class="tech-toast-head">
+    <span class="tech-toast-label">📟 TECH SUPPORT</span>
+    <button id="btn-tech-support-dismiss" class="tech-toast-close" aria-label="Dismiss">✕</button>
+  </div>
+  <p class="tech-toast-body" id="tech-toast-text"></p>
 </div>
 <div id="app">
   <header id="hud">
@@ -532,6 +581,7 @@
           <p class="eyebrow" id="greeting-eyebrow">// status</p>
           <h1 id="greeting-text">Hey.</h1>
           <p class="body-text" id="greeting-sub"></p>
+          <button id="btn-tech-support-home" class="ghost-btn tech-support-btn">📟 TECH SUPPORT</button>
         </div>
 
         <div class="panel timeline-panel">
@@ -624,6 +674,14 @@
         <p class="body-text" id="anachronism-text"></p>
       </div>
 
+      <div id="dossier-memoir" class="panel dossier-memoir" hidden>
+        <p class="eyebrow" id="dossier-memoir-eyebrow">// from your memoir</p>
+        <span class="mc-byline" id="dossier-memoir-byline"></span>
+        <h2 id="dossier-memoir-title"></h2>
+        <p class="mc-location" id="dossier-memoir-location"></p>
+        <p class="mc-body" id="dossier-memoir-body"></p>
+      </div>
+
       <div id="dossier-body" class="dossier-grid"></div>
 
       <div id="dossier-error" class="panel error-panel" hidden>
@@ -699,6 +757,37 @@
       </div>
     </section>
 
+    <section id="screen-memoir" class="screen" hidden>
+      <div class="panel">
+        <p class="eyebrow">// interactive autobiography</p>
+        <h1>YOUR MEMOIR</h1>
+        <p class="body-text">Write your own life story, one dated chapter at a time — a year, a place, what happened. Each chapter you save also pins itself on your HOME timeline, so jumping to that date surfaces it right next to the national archive. Tag a chapter as being about someone else (a parent, a friend) to write a bit of their story instead of your own.</p>
+        <p class="memoir-stat-line" id="memoir-stat-line"></p>
+        <button id="btn-tech-support-memoir" class="ghost-btn tech-support-btn">📟 TECH SUPPORT</button>
+      </div>
+
+      <div class="panel memoir-form">
+        <p class="eyebrow">// write a new chapter</p>
+        <label class="field-label" for="memoir-date">WHEN</label>
+        <input type="date" id="memoir-date" class="date-input">
+        <label class="field-label" for="memoir-location">WHERE (optional)</label>
+        <input type="text" id="memoir-location" class="journal-input memoir-line-input" placeholder="e.g. Quezon City, or Lola's house in Tondo">
+        <label class="field-label" for="memoir-title">CHAPTER TITLE</label>
+        <input type="text" id="memoir-title" class="journal-input memoir-line-input" placeholder="e.g. The day we moved to the city">
+        <label class="field-label" for="memoir-about">THIS CHAPTER IS ABOUT (optional)</label>
+        <input type="text" id="memoir-about" class="journal-input memoir-line-input" placeholder="Leave blank to write it as yourself, or name someone else — e.g. Lola, Dad">
+        <label class="field-label" for="memoir-body">THE STORY</label>
+        <textarea id="memoir-body" class="journal-input" rows="4" placeholder="What happened? What do you remember?"></textarea>
+        <p class="hint" id="memoir-error" hidden></p>
+        <button id="btn-save-chapter" class="primary-btn violet-glow">SAVE CHAPTER</button>
+      </div>
+
+      <div id="memoir-list" class="memoir-list"></div>
+      <div id="memoir-empty" class="panel" hidden>
+        <p class="body-text">No chapters yet. Write your first one above — it'll show up here and on your HOME timeline.</p>
+      </div>
+    </section>
+
     <section id="screen-archive" class="screen" hidden>
       <div class="panel">
         <p class="eyebrow">// operator record</p>
@@ -747,13 +836,14 @@
 
   <nav id="nav-bar" class="nav-bar" hidden>
     <button class="nav-item" data-screen="screen-home">HOME</button>
+    <button class="nav-item" data-screen="screen-memoir">MEMOIR</button>
     <button class="nav-item" data-screen="screen-gallery">GALLERY</button>
     <button class="nav-item" data-screen="screen-logbook">LOGBOOK</button>
     <button class="nav-item" data-screen="screen-archive">ARCHIVE</button>
   </nav>
 
   <footer id="footer-note">
-    <p>ARCHIVE SOURCE: curated Philippine history compilation spanning 1900–2026 (fragmentary before 1940) — politics, showbiz, technology, music, slang, fuel prices, peso/dollar exchange rates, and street-level trend, per era, each with a "verify the record" link to Wikipedia or the original news source. Includes a diagnostic quiz, a personal logbook, unlockable archive badges, a speculative butterfly-effect branch simulator (fictional "what if" thought experiments, not historical claims), a credited landmark photo gallery sourced from Wikimedia Commons, daily headlines with real INQUIRER.net sourcing where available, and a POV morning briefing with an era-appropriate suggestion for what to do that day.</p>
+    <p>ARCHIVE SOURCE: curated Philippine history compilation spanning 1900–2026 (fragmentary before 1940) — politics, showbiz, technology, music, slang, fuel prices, peso/dollar exchange rates, and street-level trend, per era, each with a "verify the record" link to Wikipedia or the original news source. Includes a diagnostic quiz, a personal logbook, unlockable archive badges, a speculative butterfly-effect branch simulator (fictional "what if" thought experiments, not historical claims), a credited landmark photo gallery sourced from Wikimedia Commons, daily headlines with real INQUIRER.net sourcing where available, a POV morning briefing with an era-appropriate suggestion for what to do that day, an interactive MEMOIR where you write your own dated life chapters (or someone else's) that pin themselves on your timeline, and a Tech Support guide you can call up for a contextual tip on the HOME and MEMOIR screens.</p>
   </footer>
 </div>
 
@@ -808,7 +898,10 @@
     { id:"loop_closed", label:"LOOP CLOSED", desc:"Return to the present 5 times.", check:function(s){ return s.returns >= 5; } },
     { id:"branch_walker", label:"BRANCH WALKER", desc:"Run the butterfly effect simulator.", check:function(s){ return s.butterflySims >= 1; } },
     { id:"curator", label:"CURATOR", desc:"Open the landmark photo gallery.", check:function(s){ return s.galleryOpened >= 1; } },
-    { id:"front_page", label:"FRONT PAGE", desc:"Land your jump on a real breaking-news date.", check:function(s){ return s.exactHeadlineHits >= 1; } }
+    { id:"front_page", label:"FRONT PAGE", desc:"Land your jump on a real breaking-news date.", check:function(s){ return s.exactHeadlineHits >= 1; } },
+    { id:"first_chapter", label:"FIRST CHAPTER", desc:"Write your first memoir chapter.", check:function(s){ return s.chaptersWritten >= 1; } },
+    { id:"memoirist", label:"MEMOIRIST", desc:"Write 5 memoir chapters.", check:function(s){ return s.chaptersWritten >= 5; } },
+    { id:"family_historian", label:"FAMILY HISTORIAN", desc:"Write a memoir chapter about someone else.", check:function(s){ return s.chaptersAboutOthers >= 1; } }
   ];
 
   // INQUIRER.net (the website) launched October 1997 — gates whether a "read the source" link can exist at all.
@@ -960,8 +1053,11 @@
   var currentGalleryLandmark = null;
   var toastTimer = null;
 
-  var ALL_SCREENS = ["screen-boot","screen-home","screen-transit","screen-dossier","screen-butterfly","screen-quiz","screen-gallery","screen-logbook","screen-archive","screen-timeout"];
-  var NAV_SCREENS = { "screen-home":true, "screen-gallery":true, "screen-logbook":true, "screen-archive":true };
+  var ALL_SCREENS = ["screen-boot","screen-home","screen-transit","screen-dossier","screen-butterfly","screen-quiz","screen-memoir","screen-gallery","screen-logbook","screen-archive","screen-timeout"];
+  var NAV_SCREENS = { "screen-home":true, "screen-memoir":true, "screen-gallery":true, "screen-logbook":true, "screen-archive":true };
+
+  var TECH_SUPPORT_TOAST_MS = 7000;
+  var techToastTimer = null;
 
   function $(id){ return document.getElementById(id); }
 
@@ -1062,6 +1158,12 @@
   }
   function saveJournal(arr){ localStorage.setItem("bbp_journal", JSON.stringify(arr)); }
 
+  function loadMemoir(){
+    var raw = localStorage.getItem("bbp_memoir");
+    return raw ? JSON.parse(raw) : [];
+  }
+  function saveMemoir(arr){ localStorage.setItem("bbp_memoir", JSON.stringify(arr)); }
+
   function loadUnlocked(){
     var raw = localStorage.getItem("bbp_achievements");
     return raw ? JSON.parse(raw) : [];
@@ -1070,6 +1172,7 @@
   function checkAchievements(){
     var s = loadStats();
     var journal = loadJournal();
+    var memoir = loadMemoir();
     var birthStr = localStorage.getItem("bbp_birthdate");
     if(!birthStr) return loadUnlocked();
     var birthYear = new Date(parseDateInput(birthStr)).getUTCFullYear();
@@ -1085,6 +1188,8 @@
       galleryOpened: s.galleryOpened,
       exactHeadlineHits: s.exactHeadlineHits,
       journalCount: journal.length,
+      chaptersWritten: memoir.length,
+      chaptersAboutOthers: memoir.filter(function(c){ return c.about; }).length,
       availableBuckets: computeAvailableBuckets(birthYear, currentYear)
     };
     var unlocked = loadUnlocked();
@@ -1302,6 +1407,10 @@
     $("timeline-range").textContent = birthYear + " – " + currentYear;
     buildTimeline(birthYear, currentYear);
 
+    var memoirDateInput = $("memoir-date");
+    memoirDateInput.min = birthStr;
+    memoirDateInput.max = utcDateStr(todayMs);
+
     var slider = $("jump-slider");
     slider.min = birthMs;
     slider.max = todayMs;
@@ -1344,21 +1453,39 @@
     if(currentYear > 2026){
       items.push({ start:2027, end:currentYear, label:"ARCHIVE PENDING", hasData:false, bucketKey:null, jumpYear:2027 });
     }
+
+    loadMemoir().forEach(function(c){
+      items.push({
+        start:c.year, end:c.year, label:(c.about ? c.about + "'s chapter" : "your chapter") + ": " + c.title,
+        hasData:true, isChapter:true, exactMs:Date.UTC(c.year, (c.month||1)-1, c.day||1)
+      });
+    });
+
     items.sort(function(a,b){ return a.start - b.start; });
 
     var track = $("timeline-track");
     track.innerHTML = "";
-    items.forEach(function(it, idx){
+    items.forEach(function(it){
       var row = document.createElement(it.hasData ? "button" : "div");
-      var isNow = it.hasData && idx === items.length-1 && it.end >= currentYear;
-      row.className = "timeline-item" + (it.hasData ? " clickable" : " nodata") + (isNow ? " now" : "") + (it.weak ? " weak" : "");
+      var isNow = it.hasData && !it.isChapter && it.end != null && it.start <= currentYear && it.end >= currentYear;
+      row.className = "timeline-item" + (it.hasData ? " clickable" : " nodata") + (isNow ? " now" : "") + (it.weak ? " weak" : "") + (it.isChapter ? " chapter" : "");
       var rangeLabel = it.range || (it.start === it.end ? String(it.start) : it.start + "–" + it.end);
-      var flag = it.hasData ? (isNow ? "YOU ARE HERE" : (it.weak ? "WEAK SIGNAL" : "JUMP")) : "NO SIGNAL";
+      var flag = it.isChapter ? "MEMOIR" : it.hasData ? (isNow ? "YOU ARE HERE" : (it.weak ? "WEAK SIGNAL" : "JUMP")) : "NO SIGNAL";
       row.innerHTML =
         '<span class="t-range">' + rangeLabel + '</span>' +
-        '<span class="t-era">' + it.label + '</span>' +
+        '<span class="t-era">' + escapeHtml(it.label) + '</span>' +
         '<span class="t-flag">' + flag + '</span>';
-      if(it.hasData){
+      if(it.isChapter){
+        row.addEventListener("click", function(ms){
+          return function(){
+            var slider = $("jump-slider");
+            var clamped = Math.max(Number(slider.min), Math.min(Number(slider.max), ms));
+            slider.value = clamped;
+            updateJumpReadout(clamped);
+            engageJump(clamped);
+          };
+        }(it.exactMs));
+      } else if(it.hasData){
         row.addEventListener("click", function(jy){
           return function(){
             var ms = Date.UTC(jy, 0, 2);
@@ -1440,6 +1567,8 @@
     eraLabelEl.textContent = bucketKey && ERA_LABELS[bucketKey] ? ERA_LABELS[bucketKey] + (WEAK_SIGNAL_BUCKETS[bucketKey] ? "  ·  SIGNAL: FRAGMENTARY" : "") : (year < 1900 ? "NO SIGNAL" : "ARCHIVE PENDING");
     eraLabelEl.classList.toggle("weak-signal", !!WEAK_SIGNAL_BUCKETS[bucketKey]);
 
+    renderDossierMemoir(year, month, day);
+
     var body = $("dossier-body");
     var errBox = $("dossier-error");
 
@@ -1477,6 +1606,169 @@
     $("dossier-butterfly-cta").hidden = false;
     $("journal-input").value = "";
     $("journal-saved-hint").hidden = true;
+  }
+
+  /* ---------------- memoir (interactive autobiography) ---------------- */
+  function utcDateStr(ms){
+    var d = new Date(ms);
+    return d.getUTCFullYear() + "-" + String(d.getUTCMonth()+1).padStart(2,"0") + "-" + String(d.getUTCDate()).padStart(2,"0");
+  }
+
+  function findChapterForDate(year, month, day){
+    var list = loadMemoir();
+    for(var i=0;i<list.length;i++){
+      var c = list[i];
+      if(c.year === year && (c.month||1) === month && (c.day||1) === day) return c;
+    }
+    return null;
+  }
+
+  function renderDossierMemoir(year, month, day){
+    var panel = $("dossier-memoir");
+    if(!month || !day){ panel.hidden = true; return; }
+    var c = findChapterForDate(year, month, day);
+    if(!c){ panel.hidden = true; return; }
+    $("dossier-memoir-eyebrow").textContent = c.about ? "// from " + c.about + "'s chapter" : "// from your memoir";
+    var bylineEl = $("dossier-memoir-byline");
+    bylineEl.textContent = c.about ? "ABOUT: " + c.about.toUpperCase() : "WRITTEN BY YOU";
+    bylineEl.className = "mc-byline " + (c.about ? "other" : "self");
+    $("dossier-memoir-title").textContent = c.title;
+    $("dossier-memoir-location").textContent = c.location ? "📍 " + c.location : "";
+    $("dossier-memoir-body").textContent = c.body || "";
+    panel.hidden = false;
+  }
+
+  function memoirDateBounds(){
+    var birthStr = localStorage.getItem("bbp_birthdate");
+    return { min: birthStr || null, max: utcDateStr(todayUTCMidnight()) };
+  }
+
+  function renderMemoirStatLine(){
+    var list = loadMemoir();
+    $("memoir-stat-line").textContent = list.length
+      ? list.length + " chapter" + (list.length === 1 ? "" : "s") + " written so far."
+      : "No chapters written yet — this page is blank until you write one.";
+  }
+
+  function buildTimelineFromStorage(){
+    var birthStr = localStorage.getItem("bbp_birthdate");
+    if(!birthStr) return;
+    var birthYear = new Date(parseDateInput(birthStr)).getUTCFullYear();
+    var currentYear = new Date(todayUTCMidnight()).getUTCFullYear();
+    buildTimeline(birthYear, currentYear);
+  }
+
+  function renderMemoir(){
+    renderMemoirStatLine();
+    var list = loadMemoir().slice().sort(function(a,b){
+      return Date.UTC(a.year,(a.month||1)-1,a.day||1) - Date.UTC(b.year,(b.month||1)-1,b.day||1);
+    });
+    var container = $("memoir-list");
+    var empty = $("memoir-empty");
+    if(!list.length){
+      container.innerHTML = "";
+      empty.hidden = false;
+      return;
+    }
+    empty.hidden = true;
+    container.innerHTML = list.map(function(c, i){
+      var dateLabel = fmtDate(new Date(Date.UTC(c.year, (c.month||1)-1, c.day||1)));
+      return '<div class="panel memoir-chapter">' +
+        '<div class="mc-head"><span class="mc-chapter-no">CHAPTER ' + (i+1) + '</span><span class="mc-date">' + dateLabel + '</span>' +
+        (c.location ? '<span class="mc-location">📍 ' + escapeHtml(c.location) + '</span>' : '') +
+        '<button class="ghost-btn mc-delete" data-id="' + c.id + '">DELETE</button></div>' +
+        '<span class="mc-byline ' + (c.about ? "other" : "self") + '">' + (c.about ? "ABOUT: " + escapeHtml(c.about.toUpperCase()) : "WRITTEN BY YOU") + '</span>' +
+        '<h3 class="mc-title">' + escapeHtml(c.title) + '</h3>' +
+        (c.body ? '<p class="mc-body">' + escapeHtml(c.body) + '</p>' : '') +
+        '</div>';
+    }).join("");
+    container.querySelectorAll(".mc-delete").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.getAttribute("data-id");
+        var arr = loadMemoir().filter(function(c){ return String(c.id) !== id; });
+        saveMemoir(arr);
+        renderMemoir();
+        buildTimelineFromStorage();
+      });
+    });
+  }
+
+  function saveChapter(){
+    var dateStr = $("memoir-date").value;
+    var location = $("memoir-location").value.trim();
+    var title = $("memoir-title").value.trim();
+    var about = $("memoir-about").value.trim();
+    var body = $("memoir-body").value.trim();
+    var errEl = $("memoir-error");
+    errEl.hidden = true;
+
+    if(!dateStr){ errEl.textContent = "Pick a date for this chapter first."; errEl.hidden = false; return; }
+    if(!title){ errEl.textContent = "Give this chapter a title."; errEl.hidden = false; return; }
+
+    var bounds = memoirDateBounds();
+    if(bounds.min && dateStr < bounds.min){ errEl.textContent = "That's before your origin lock — the Protocol can't place a chapter there."; errEl.hidden = false; return; }
+    if(dateStr > bounds.max){ errEl.textContent = "That date hasn't happened yet."; errEl.hidden = false; return; }
+
+    var ms = parseDateInput(dateStr);
+    var d = new Date(ms);
+    var entry = {
+      id: Date.now() + "-" + Math.floor(Math.random()*10000),
+      year: d.getUTCFullYear(), month: d.getUTCMonth()+1, day: d.getUTCDate(),
+      location: location, title: title, about: about, body: body, ts: Date.now()
+    };
+    var arr = loadMemoir();
+    arr.push(entry);
+    saveMemoir(arr);
+
+    $("memoir-date").value = "";
+    $("memoir-location").value = "";
+    $("memoir-title").value = "";
+    $("memoir-about").value = "";
+    $("memoir-body").value = "";
+
+    renderMemoir();
+    buildTimelineFromStorage();
+    checkAchievements();
+  }
+
+  function initMemoir(){
+    $("btn-save-chapter").addEventListener("click", saveChapter);
+    var bounds = memoirDateBounds();
+    var dateInput = $("memoir-date");
+    if(bounds.min) dateInput.min = bounds.min;
+    dateInput.max = bounds.max;
+  }
+
+  /* ---------------- tech support guide ---------------- */
+  function techSupportTipFor(screenKey){
+    var memoir = loadMemoir();
+    var s = loadStats();
+    var hasOther = memoir.some(function(c){ return c.about; });
+    if(screenKey === "memoir"){
+      if(memoir.length === 0) return "Blank page, huh? Start small — a birthday, a move, a first day somewhere. Doesn't have to be dramatic. Just give it a date and a title.";
+      if(!hasOther) return "You can also write a chapter ABOUT someone else — just put their name in the \"this chapter is about\" field. Good way to keep a relative's story on record too.";
+      return "Nice archive you're building. Every chapter you save also pins itself on your HOME timeline — tap it there to jump straight back to it.";
+    }
+    if(s.totalJumps === 0) return "Hit ENGAGE JUMP whenever you're ready — the slider picks the date, I just keep the lights on.";
+    if(memoir.length === 0) return "Pro tip: the MEMOIR tab lets you pin your own life onto this timeline, right next to the national archive. Try logging one chapter.";
+    return "I see pins on your timeline now — those are your memoir chapters. Tap one to jump straight back to that day.";
+  }
+
+  function showTechSupport(screenKey){
+    $("tech-toast-text").textContent = techSupportTipFor(screenKey);
+    var toast = $("tech-support-toast");
+    toast.hidden = false;
+    if(techToastTimer) window.clearTimeout(techToastTimer);
+    techToastTimer = window.setTimeout(function(){ toast.hidden = true; }, TECH_SUPPORT_TOAST_MS);
+  }
+
+  function initTechSupport(){
+    $("btn-tech-support-home").addEventListener("click", function(){ showTechSupport("home"); });
+    $("btn-tech-support-memoir").addEventListener("click", function(){ showTechSupport("memoir"); });
+    $("btn-tech-support-dismiss").addEventListener("click", function(){
+      $("tech-support-toast").hidden = true;
+      if(techToastTimer) window.clearTimeout(techToastTimer);
+    });
   }
 
   /* ---------------- butterfly effect simulator ---------------- */
@@ -1833,6 +2125,7 @@
         if(target === "screen-logbook") renderLogbook();
         if(target === "screen-archive") renderArchive();
         if(target === "screen-gallery") renderGalleryList();
+        if(target === "screen-memoir") renderMemoir();
         showScreen(target);
       });
     });
@@ -1896,6 +2189,8 @@
   initBoot();
   initNav();
   initDossierExtras();
+  initMemoir();
+  initTechSupport();
   var existingBirth = localStorage.getItem("bbp_birthdate");
   if(existingBirth){
     bootDone();
