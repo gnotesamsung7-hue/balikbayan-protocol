@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
@@ -53,6 +55,23 @@ jobs:
         with:
           name: balikbayan-protocol-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      # Keeps the public download page (docs/download.html, served by GitHub
+      # Pages) and its QR code always pointing at a working, up-to-date build --
+      # the in-app SHARE/DOWNLOAD QR links here, so this has to stay current.
+      - name: Publish latest debug APK for in-app QR download
+        run: |
+          mkdir -p docs
+          cp android/app/build/outputs/apk/debug/app-debug.apk docs/balikbayan-protocol-debug.apk
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/balikbayan-protocol-debug.apk
+          if git diff --cached --quiet; then
+            echo "APK unchanged, nothing to publish."
+          else
+            git commit -m "Auto-publish latest debug APK for in-app download [skip ci]"
+            git push
+          fi
 
       # The signed release bundle only builds once the four RELEASE_* secrets
       # below are set in this repo (Settings > Secrets and variables > Actions).
