@@ -27,6 +27,10 @@
     --amber-glow: rgba(255,176,32,.35);
     --violet-glow: rgba(178,107,255,.35);
     --green-glow: rgba(61,220,132,.35);
+    --metal-hi: #3a4463;
+    --metal-lo: #0a0e18;
+    --rust: #9a5536;
+    --rust-glow: rgba(154,85,54,.4);
     --font-display:'Iceberg', 'Arial Narrow', sans-serif;
     --font-body:'IBM Plex Sans', system-ui, -apple-system, sans-serif;
     --font-mono:'IBM Plex Mono', ui-monospace, 'Courier New', monospace;
@@ -130,7 +134,9 @@
   .body-text{ color:var(--text-dim); font-size:.95rem; line-height:1.65; max-width:62ch; }
 
   .panel{
-    background:linear-gradient(180deg, var(--bg-raised), var(--bg-panel));
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,.014) 0px, rgba(255,255,255,.014) 2px, transparent 2px, transparent 7px),
+      linear-gradient(180deg, var(--bg-raised), var(--bg-panel));
     border:1px solid var(--line);
     padding:24px 22px;
     clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
@@ -139,9 +145,86 @@
   .panel::before{
     content:""; position:absolute; top:0; left:0; width:46px; height:1px; background:var(--cyan); box-shadow:0 0 8px var(--cyan-glow);
   }
+  /* corner rivets on the panel's two unclipped (square) corners -- a quiet,
+     app-wide echo of the riveted-dashboard reference, not a focal element */
+  .panel::after{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:
+      radial-gradient(circle 1.4px, rgba(235,240,255,.3), transparent 72%) calc(100% - 9px) 9px / 9px 9px no-repeat,
+      radial-gradient(circle 1.4px, rgba(235,240,255,.3), transparent 72%) 9px calc(100% - 9px) / 9px 9px no-repeat;
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .panel::before{ animation: accentPulse 4.5s ease-in-out infinite; }
+  }
+  @keyframes accentPulse{
+    0%,100%{ opacity:.75; box-shadow:0 0 6px var(--cyan-glow); }
+    50%{ opacity:1; box-shadow:0 0 12px var(--cyan-glow); }
+  }
+
+  /* ---------- digital readout flicker (shared by any live-value display) ---------- */
+  @media (prefers-reduced-motion: no-preference){
+    .digi-flicker, .stat-value, .jump-readout-value{ animation: digiFlicker 5s infinite steps(1,end); }
+    .stat-value{ animation-delay:-1.3s; }
+    .jump-readout-value{ animation-delay:-2.6s; }
+  }
+  @keyframes digiFlicker{
+    0%, 100%{ opacity:1; }
+    91%{ opacity:1; }
+    92%{ opacity:.78; text-shadow:none; }
+    93%{ opacity:1; }
+    96%{ opacity:.86; }
+    97%{ opacity:1; }
+  }
+
+  /* ---------- analog gauge ---------- */
+  .gauge{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .gauge-face{ width:64px; height:64px; overflow:visible; }
+  .gauge-ring{ fill:var(--metal-lo); stroke:var(--line); stroke-width:3; }
+  .gauge-ticks line{ stroke:var(--text-faint); stroke-width:1.5; }
+  .gauge-ticks line.major{ stroke:var(--text-dim); stroke-width:2; }
+  .gauge-needle{
+    stroke:var(--amber); stroke-width:2.5; stroke-linecap:round;
+    filter:drop-shadow(0 0 3px var(--amber-glow));
+    transform-origin:50px 50px; transform:rotate(var(--gauge-rot, -45deg));
+  }
+  .gauge-hub{ fill:var(--text-dim); }
+  @media (prefers-reduced-motion: no-preference){
+    .gauge-needle{ animation: gaugeIdle 3.6s ease-in-out infinite; }
+  }
+  @keyframes gaugeIdle{
+    0%,100%{ transform:rotate(var(--gauge-rot, -45deg)); }
+    50%{ transform:rotate(calc(var(--gauge-rot, -45deg) + 3deg)); }
+  }
+  .gauge-label{ font-family:var(--font-mono); font-size:.6rem; letter-spacing:.1em; color:var(--text-faint); }
+  .gauge-sm .gauge-face{ width:44px; height:44px; }
+
+  /* ---------- animated frequency / equalizer bars ---------- */
+  .eq-bars{ display:flex; align-items:flex-end; gap:3px; height:34px; }
+  .eq-bars span{
+    flex:1; min-width:3px; border-radius:1px; height:22%;
+    background:linear-gradient(180deg, var(--cyan), var(--magenta));
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .eq-bars span{ animation: eqBar 1.2s ease-in-out infinite; }
+    .eq-bars span:nth-child(2n){ animation-duration:.9s; animation-delay:-.3s; }
+    .eq-bars span:nth-child(3n){ animation-duration:1.5s; animation-delay:-.6s; }
+    .eq-bars span:nth-child(5n){ animation-duration:.7s; animation-delay:-.15s; }
+    .eq-bars span:nth-child(7n){ animation-duration:1.8s; animation-delay:-.9s; }
+  }
+  @keyframes eqBar{ 0%,100%{ height:18%; } 50%{ height:92%; } }
 
   /* ---------- start ---------- */
-  #screen-start{ align-items:center; text-align:center; padding-top:10vh; }
+  #screen-start{
+    align-items:center; text-align:center;
+    margin:-32px -20px -40px; padding:calc(10vh + 32px) 20px 40px;
+    min-height:100vh;
+    background-image:
+      linear-gradient(180deg, rgba(7,10,18,.4) 0%, rgba(7,10,18,.78) 58%, rgba(7,10,18,.96) 100%),
+      url('start-bg.jpg');
+    background-size:cover;
+    background-position:center 25%;
+    background-repeat:no-repeat;
+  }
   .start-panel{ max-width:560px; width:100%; }
   .start-panel .start-wordmark{ font-size:2.2rem; line-height:1.2; margin:6px 0 10px; color:var(--text); }
   .start-panel .start-tagline{ font-family:var(--font-mono); font-size:.78rem; letter-spacing:.1em; color:var(--text-dim); margin:0 auto 26px; max-width:48ch; }
@@ -214,6 +297,19 @@
   .jump-readout{ display:flex; justify-content:space-between; align-items:baseline; margin:18px 0 4px; }
   .jump-readout-label{ font-family:var(--font-mono); font-size:.68rem; color:var(--text-faint); letter-spacing:.12em; }
   .jump-readout-value{ font-family:var(--font-mono); font-size:1.2rem; color:var(--amber); font-variant-numeric:tabular-nums; }
+
+  .console-row{
+    display:flex; align-items:center; gap:22px; flex-wrap:wrap;
+    margin:16px 0 22px; padding:14px 16px;
+    background:var(--bg); border:1px solid var(--line);
+  }
+  .console-gauges{ display:flex; gap:16px; flex-shrink:0; }
+  .console-freq{ flex:1; min-width:130px; }
+  .console-freq-label{ font-family:var(--font-mono); font-size:.6rem; letter-spacing:.1em; color:var(--text-faint); margin-bottom:7px; }
+  @media (max-width:430px){
+    .console-row{ justify-content:center; }
+    .console-freq{ width:100%; }
+  }
 
   /* ---------- transit ---------- */
   #screen-transit{ align-items:center; justify-content:center; min-height:50vh; }
@@ -584,9 +680,9 @@
   <main id="main">
 
     <!--
-      ART PROMPT CUE (for an AI image generator, e.g. to make a background/hero
-      image for #screen-start below — declare any AI-generated art used in the
-      shipped app, same as the Play Store icon/feature graphic):
+      ART CREDIT: #screen-start's background (www/start-bg.jpg) is AI-generated
+      (Google Gemini), from this prompt -- declared here same as the Play Store
+      icon/feature graphic:
 
       "A moody cyberpunk digital painting of a lone Filipino time traveler
       standing in a neon-lit Manila street at night, rain-slicked pavement
@@ -595,9 +691,8 @@
       layered with faint CRT scanlines, dark blue-black color grade,
       cinematic wide shot, high detail, 16:9"
 
-      Drop the resulting image in www/ and reference it as a background-image
-      on .start-panel (or #screen-start) once generated — no code change needed
-      beyond that CSS rule.
+      To swap in a different image later, just replace www/start-bg.jpg with
+      another file of the same name — no CSS/code change needed.
     -->
     <section id="screen-start" class="screen">
       <div class="panel start-panel">
@@ -636,7 +731,55 @@
         </div>
 
         <div class="panel jump-panel">
-          <p class="eyebrow">// temporal jump control</p>
+          <p class="eyebrow">// temporal flux console</p>
+
+          <div class="console-row">
+            <div class="console-gauges">
+              <div class="gauge" style="--gauge-rot:-50deg">
+                <svg class="gauge-face" viewBox="0 0 100 100" aria-hidden="true">
+                  <circle class="gauge-ring" cx="50" cy="50" r="46"></circle>
+                  <g class="gauge-ticks">
+                    <line class="major" x1="20.56" y1="67" x2="11.90" y2="72"></line>
+                    <line x1="16.52" y1="44.10" x2="6.67" y2="42.36"></line>
+                    <line x1="28.14" y1="23.96" x2="21.72" y2="16.30"></line>
+                    <line class="major" x1="50" y1="16" x2="50" y2="6"></line>
+                    <line x1="71.86" y1="23.96" x2="78.28" y2="16.30"></line>
+                    <line x1="83.48" y1="44.10" x2="93.33" y2="42.36"></line>
+                    <line class="major" x1="79.44" y1="67" x2="88.10" y2="72"></line>
+                  </g>
+                  <line class="gauge-needle" x1="50" y1="50" x2="50" y2="14"></line>
+                  <circle class="gauge-hub" cx="50" cy="50" r="4"></circle>
+                </svg>
+                <span class="gauge-label">SIGNAL</span>
+              </div>
+              <div class="gauge" style="--gauge-rot:10deg">
+                <svg class="gauge-face" viewBox="0 0 100 100" aria-hidden="true">
+                  <circle class="gauge-ring" cx="50" cy="50" r="46"></circle>
+                  <g class="gauge-ticks">
+                    <line class="major" x1="20.56" y1="67" x2="11.90" y2="72"></line>
+                    <line x1="16.52" y1="44.10" x2="6.67" y2="42.36"></line>
+                    <line x1="28.14" y1="23.96" x2="21.72" y2="16.30"></line>
+                    <line class="major" x1="50" y1="16" x2="50" y2="6"></line>
+                    <line x1="71.86" y1="23.96" x2="78.28" y2="16.30"></line>
+                    <line x1="83.48" y1="44.10" x2="93.33" y2="42.36"></line>
+                    <line class="major" x1="79.44" y1="67" x2="88.10" y2="72"></line>
+                  </g>
+                  <line class="gauge-needle" x1="50" y1="50" x2="50" y2="14"></line>
+                  <circle class="gauge-hub" cx="50" cy="50" r="4"></circle>
+                </svg>
+                <span class="gauge-label">DRIFT</span>
+              </div>
+            </div>
+            <div class="console-freq">
+              <p class="console-freq-label">// temporal frequency</p>
+              <div class="eq-bars" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+          </div>
+
           <div class="slider-row">
             <span class="slider-cap" id="slider-min-label">ORIGIN</span>
             <input type="range" id="jump-slider" class="jump-slider">
@@ -662,8 +805,25 @@
       <div class="dossier-header panel">
         <div>
           <p class="eyebrow">// coordinates locked</p>
-          <h1 id="dossier-year">1998</h1>
+          <h1 id="dossier-year" class="digi-flicker">1998</h1>
           <p id="dossier-era-label">—</p>
+        </div>
+        <div class="gauge gauge-sm">
+          <svg class="gauge-face" viewBox="0 0 100 100" aria-hidden="true">
+            <circle class="gauge-ring" cx="50" cy="50" r="46"></circle>
+            <g class="gauge-ticks">
+              <line class="major" x1="20.56" y1="67" x2="11.90" y2="72"></line>
+              <line x1="16.52" y1="44.10" x2="6.67" y2="42.36"></line>
+              <line x1="28.14" y1="23.96" x2="21.72" y2="16.30"></line>
+              <line class="major" x1="50" y1="16" x2="50" y2="6"></line>
+              <line x1="71.86" y1="23.96" x2="78.28" y2="16.30"></line>
+              <line x1="83.48" y1="44.10" x2="93.33" y2="42.36"></line>
+              <line class="major" x1="79.44" y1="67" x2="88.10" y2="72"></line>
+            </g>
+            <line class="gauge-needle" x1="50" y1="50" x2="50" y2="14" style="--gauge-rot:40deg"></line>
+            <circle class="gauge-hub" cx="50" cy="50" r="4"></circle>
+          </svg>
+          <span class="gauge-label">SYNC</span>
         </div>
         <div class="dossier-actions">
           <button id="btn-jump-again" class="ghost-btn">JUMP AGAIN</button>
