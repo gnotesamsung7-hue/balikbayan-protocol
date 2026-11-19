@@ -24,9 +24,12 @@ async function run() {
   const doc = window.document;
   const $ = (id) => doc.getElementById(id);
 
-  // ---- boot screen present ----
-  if (!$("screen-boot") || $("screen-boot").hidden) fail("boot screen should be visible initially");
-  else ok("boot screen visible on fresh load");
+  // ---- start screen present, then advance to boot screen ----
+  if (!$("screen-start") || $("screen-start").hidden) fail("start screen should be visible initially");
+  else ok("start screen visible on fresh load");
+  $("btn-start-begin").click();
+  if (!$("screen-boot") || $("screen-boot").hidden) fail("boot screen should be visible after tapping BEGIN");
+  else ok("boot screen shown after tapping BEGIN");
 
   // ---- set a birthdate and lock origin ----
   const input = $("input-birthdate");

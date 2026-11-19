@@ -17,6 +17,7 @@ async function run() {
   const $ = (id) => doc.getElementById(id);
 
   // ---- origin lock ----
+  $("btn-start-begin").click();
   const birthInput = $("input-birthdate");
   birthInput.value = "1990-06-15";
   birthInput.dispatchEvent(new window.Event("input", { bubbles: true }));

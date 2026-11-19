@@ -15,6 +15,7 @@ async function run() {
   const doc = window.document;
   const $ = (id) => doc.getElementById(id);
 
+  $("btn-start-begin").click();
   const input = $("input-birthdate");
   input.value = "1905-03-01";
   input.dispatchEvent(new window.Event("input", { bubbles: true }));
